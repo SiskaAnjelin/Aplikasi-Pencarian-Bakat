@@ -23,6 +23,26 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  // Fungsi untuk menangani login lokal & navigasi ke dashboard
+  void _handleLogin() {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text.trim();
+
+    // Validasi sederhana supaya input tidak boleh kosong
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Username dan Password tidak boleh kosong!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Navigasi langsung ke halaman Dashboard lokal (Pastikan rute '/dashboard' sudah didaftarkan di main.dart)
+    Navigator.pushReplacementNamed(context, '/dashboard');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,182 +74,176 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
-                // Isi halaman login
+                // Isi halaman login dibungkus SingleChildScrollView agar aman dari overflow
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 72),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 72),
 
-                      Text(
-                        'Selamat Datang!',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          color: darkPurple,
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      Text(
-                        'Silakan masuk dengan akun\n'
-                        'yang telah terdaftar!',
-                        style: TextStyle(
-                          fontSize: 12,
-                          height: 1.5,
-                          color: darkPurple,
-                        ),
-                      ),
-
-                      const SizedBox(height: 22),
-
-                      // Username
-                      TextField(
-                        controller: _usernameController,
-                        decoration: InputDecoration(
-                          hintText: 'Username',
-                          hintStyle: const TextStyle(fontSize: 11),
-                          prefixIcon: const Icon(
-                            Icons.person,
-                            size: 16,
-                          ),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 10),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(
-                              color: darkPurple,
-                              width: 0.6,
-                            ),
+                        Text(
+                          'Selamat Datang!',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: darkPurple,
                           ),
                         ),
-                      ),
 
-                      const SizedBox(height: 20),
+                        const SizedBox(height: 12),
 
-                      // Password
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          hintText: 'Password',
-                          hintStyle: const TextStyle(fontSize: 11),
-                          prefixIcon: const Icon(
-                            Icons.person,
-                            size: 16,
+                        Text(
+                          'Silakan masuk dengan akun\n'
+                          'yang telah terdaftar!',
+                          style: TextStyle(
+                            fontSize: 12,
+                            height: 1.5,
+                            color: darkPurple,
                           ),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        // Username
+                        TextField(
+                          controller: _usernameController,
+                          decoration: InputDecoration(
+                            hintText: 'Username',
+                            hintStyle: const TextStyle(fontSize: 11),
+                            prefixIcon: const Icon(
+                              Icons.person,
                               size: 16,
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
-                          ),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 10),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            borderSide: BorderSide(
-                              color: darkPurple,
-                              width: 0.6,
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 10),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
                             ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 42),
-
-                      // Tombol login
-                      SizedBox(
-                        width: double.infinity,
-                        height: 38,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            // Nanti hubungkan ke Supabase Auth.
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Tombol login berhasil ditekan',
-                                ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide(
+                                color: darkPurple,
+                                width: 0.6,
                               ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: purple,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text(
-                            'Login',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                      ),
 
-                      const SizedBox(height: 6),
+                        const SizedBox(height: 20),
 
-                      Center(
-                        child: TextButton(
-                          onPressed: () {
-                            // Nanti tambahkan fitur lupa password.
-                          },
-                          child: Text(
-                            'Lupa password?',
-                            style: TextStyle(
-                              color: darkPurple,
-                              fontSize: 11,
+                        // Password
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          decoration: InputDecoration(
+                            hintText: 'Password',
+                            hintStyle: const TextStyle(fontSize: 11),
+                            prefixIcon: const Icon(
+                              Icons.lock,
+                              size: 16,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                size: 16,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 10),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide(
+                                color: darkPurple,
+                                width: 0.6,
+                              ),
                             ),
                           ),
                         ),
-                      ),
 
-                      const SizedBox(height: 12),
+                        const SizedBox(height: 42),
 
-                      Center(
-                        child: Wrap(
-                          alignment: WrapAlignment.center,
-                          children: [
-                            Text(
-                              'Belum punya akun? ',
+                        // Tombol login yang terhubung ke navigasi lokal
+                        SizedBox(
+                          width: double.infinity,
+                          height: 38,
+                          child: ElevatedButton(
+                            onPressed: _handleLogin,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: purple,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              'Login',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 6),
+
+                        Center(
+                          child: TextButton(
+                            onPressed: () {
+                              // Fitur lupa password
+                            },
+                            child: Text(
+                              'Lupa password?',
                               style: TextStyle(
                                 color: darkPurple,
                                 fontSize: 11,
                               ),
                             ),
-                            const Text(
-                              'Hubungi Admin',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+
+                        const SizedBox(height: 12),
+
+                        Center(
+                          child: Wrap(
+                            alignment: WrapAlignment.center,
+                            children: [
+                              Text(
+                                'Belum punya akun? ',
+                                style: TextStyle(
+                                  color: darkPurple,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              const Text(
+                                'Hubungi Admin',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
                   ),
                 ),
               ],

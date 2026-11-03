@@ -1,4 +1,4 @@
-  import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
@@ -13,107 +13,134 @@ class SplashPage extends StatelessWidget {
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Center(
-          child: AspectRatio(
-            aspectRatio: 0.53,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(30),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // Background utama
-                  const ColoredBox(color: Colors.white),
+          // Dibungkus GestureDetector agar seluruh area kartu layar HP bisa disentuh
+          child: GestureDetector(
+            onTap: () {
+              Navigator.pushReplacementNamed(context, '/login');
+            },
+            child: AspectRatio(
+              aspectRatio: 0.53,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(30),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Background utama
+                    const ColoredBox(color: Colors.white),
 
-                  // Aksen kuning kanan atas
-                  Positioned(
-                    top: -32,
-                    right: -32,
-                    child: _circle(110, yellow),
-                  ),
+                    // Aksen kuning kanan atas
+                    Positioned(
+                      top: -32,
+                      right: -32,
+                      child: _circle(110, yellow),
+                    ),
 
-                  // Aksen ungu kiri bawah
-                  Positioned(
-                    left: -55,
-                    bottom: 28,
-                    child: _circle(150, purple),
-                  ),
+                    // Aksen ungu kiri bawah
+                    Positioned(
+                      left: -55,
+                      bottom: 28,
+                      child: _circle(150, purple),
+                    ),
 
-                  // Aksen kuning kanan bawah
-                  Positioned(
-                    right: -20,
-                    bottom: -10,
-                    child: ClipPath(
-                      clipper: BottomWaveClipper(),
-                      child: Container(
-                        width: 160,
-                        height: 125,
-                        color: yellow,
+                    // Aksen kuning kanan bawah
+                    Positioned(
+                      right: -20,
+                      bottom: -10,
+                      child: ClipPath(
+                        clipper: BottomWaveClipper(),
+                        child: Container(
+                          width: 160,
+                          height: 125,
+                          color: yellow,
+                        ),
                       ),
                     ),
-                  ),
 
-                  // Logo dan tulisan
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Icon(
-                                Icons.auto_awesome,
-                                size: 94,
-                                color: purple,
-                              ),
-                              const Positioned(
-                                top: 0,
-                                right: 3,
-                                child: Icon(
+                    // Logo Niskala dan Judul
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Stack Logo (Bintang Ungu + Siluet Orang + Kilau Kuning)
+                            Stack(
+                              alignment: Alignment.center,
+                              clipBehavior: Clip.none,
+                              children: [
+                                // 1. Bintang utama di latar belakang (Ungu)
+                                const Icon(
                                   Icons.star,
-                                  size: 27,
-                                  color: yellow,
+                                  size: 110,
+                                  color: purple,
                                 ),
-                              ),
-                              const Icon(
-                                Icons.circle,
-                                size: 19,
-                                color: Colors.white,
-                              ),
-                            ],
-                          ),
 
-                          const SizedBox(height: 6),
+                                // 2. Siluet orang/potensi di tengah (Putih)
+                                const Positioned(
+                                  top: 32,
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 50,
+                                    color: Colors.white,
+                                  ),
+                                ),
 
-                          const Text(
-                            'Niskala',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.6,
-                              color: darkPurple,
+                                // 3. Aksen bintang kilau kecil di kanan atas (Kuning)
+                                const Positioned(
+                                  top: 10,
+                                  right: 15,
+                                  child: Icon(
+                                    Icons.auto_awesome,
+                                    size: 32,
+                                    color: yellow,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
 
-                          const SizedBox(height: 5),
+                            const SizedBox(height: 12),
 
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
-                            child: Text(
-                              'Menemukan Potensi yang Belum Terlihat',
-                              textAlign: TextAlign.center,
+                            const Text(
+                              'Niskala',
                               style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.6,
                                 color: darkPurple,
                               ),
                             ),
-                          ),
-                        ],
+
+                            const SizedBox(height: 5),
+
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 8),
+                              child: Text(
+                                'Menemukan Potensi yang Belum Terlihat',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w600,
+                                  color: darkPurple,
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 16),
+
+                            // Petunjuk kecil interaksi
+                            const Text(
+                              'Ketuk layar untuk masuk',
+                              style: TextStyle(
+                                fontSize: 8,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
