@@ -51,14 +51,6 @@ class DashboardGuruPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Text(
-                        'Berikut ringkasan data siswa dan perkembangan bakat.',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: darkPurple.withOpacity(0.8),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
 
                       // Statistik Cards (Row 3 Kotak)
                       Row(
@@ -118,7 +110,7 @@ class DashboardGuruPage extends StatelessWidget {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),

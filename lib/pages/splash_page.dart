@@ -13,7 +13,6 @@ class SplashPage extends StatelessWidget {
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Center(
-          // Dibungkus GestureDetector agar seluruh area kartu layar HP bisa disentuh
           child: GestureDetector(
             onTap: () {
               Navigator.pushReplacementNamed(context, '/login');
@@ -32,14 +31,14 @@ class SplashPage extends StatelessWidget {
                     Positioned(
                       top: -32,
                       right: -32,
-                      child: _circle(110, yellow),
+                      child: _circle(155, yellow),
                     ),
 
                     // Aksen ungu kiri bawah
                     Positioned(
                       left: -55,
                       bottom: 28,
-                      child: _circle(150, purple),
+                      child: _circle(140, purple),
                     ),
 
                     // Aksen kuning kanan bawah
@@ -56,83 +55,66 @@ class SplashPage extends StatelessWidget {
                       ),
                     ),
 
-                    // Logo Niskala dan Judul
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
+                    // Logo dan teks Niskala
+                    Align(
+                      alignment: Alignment.center,
+                      child: Transform.translate(
+                        offset: const Offset(0, 5),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Stack Logo (Bintang Ungu + Siluet Orang + Kilau Kuning)
-                            Stack(
-                              alignment: Alignment.center,
-                              clipBehavior: Clip.none,
-                              children: [
-                                // 1. Bintang utama di latar belakang (Ungu)
-                                const Icon(
-                                  Icons.star,
-                                  size: 110,
-                                  color: purple,
-                                ),
+                            // Logo Niskala
+                            Image.asset(
+                              'assets/images/logo_niskala.png',
+                              width: 200,
+                              height: 170,
+                              fit: BoxFit.contain,
+                            ),
 
-                                // 2. Siluet orang/potensi di tengah (Putih)
-                                const Positioned(
-                                  top: 32,
-                                  child: Icon(
-                                    Icons.person,
-                                    size: 50,
-                                    color: Colors.white,
+                            // Nama Niskala
+                            Transform.translate(
+                              offset: const Offset(0, -12),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    'Niskala',
+                                    style: TextStyle(
+                                      fontSize: 25,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: -0.6,
+                                      color: darkPurple,
+                                    ),
                                   ),
-                                ),
 
-                                // 3. Aksen bintang kilau kecil di kanan atas (Kuning)
-                                const Positioned(
-                                  top: 10,
-                                  right: 15,
-                                  child: Icon(
-                                    Icons.auto_awesome,
-                                    size: 32,
-                                    color: yellow,
+                                  const SizedBox(height: 5),
+
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
+                                    child: Text(
+                                      'Menemukan Potensi yang Belum Terlihat',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: darkPurple,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
 
-                            const SizedBox(height: 12),
+                                  const SizedBox(height: 16),
 
-                            const Text(
-                              'Niskala',
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.6,
-                                color: darkPurple,
-                              ),
-                            ),
-
-                            const SizedBox(height: 5),
-
-                            const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 8),
-                              child: Text(
-                                'Menemukan Potensi yang Belum Terlihat',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w600,
-                                  color: darkPurple,
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 16),
-
-                            // Petunjuk kecil interaksi
-                            const Text(
-                              'Ketuk layar untuk masuk',
-                              style: TextStyle(
-                                fontSize: 8,
-                                color: Colors.grey,
+                                  // Petunjuk masuk
+                                  const Text(
+                                    'Klik Disini Untuk Masuk',
+                                    style: TextStyle(
+                                      fontSize: 8,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
