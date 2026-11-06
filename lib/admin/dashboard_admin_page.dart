@@ -1,12 +1,72 @@
-import 'package:flutter/material.dart';
 
-class DashboardAdminPage extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class DashboardAdminPage extends StatefulWidget {
   const DashboardAdminPage({super.key});
 
+  @override
+  State<DashboardAdminPage> createState() => _DashboardAdminPageState();
+}
+
+class _DashboardAdminPageState extends State<DashboardAdminPage> {
   static const Color primaryPurple = Color(0xFF6C5CFF);
   static const Color lightGreyBg = Color(0xFFF0F2F5);
   static const Color cardGreyBg = Color(0xFFEFF1F4);
   static const Color textDark = Color(0xFF29264F);
+
+  bool _isLoggingOut = false;
+
+  Future<void> _logout() async {
+    final konfirmasi = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Logout'),
+        content: const Text('Apakah kamu yakin ingin keluar dari akun?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (konfirmasi != true || !mounted) return;
+
+    setState(() {
+      _isLoggingOut = true;
+    });
+
+    try {
+      await Supabase.instance.client.auth.signOut();
+
+      if (!mounted) return;
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoggingOut = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal logout: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,19 +92,38 @@ class DashboardAdminPage extends StatelessWidget {
                       // Header / App Bar Custom
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
                         color: primaryPurple,
-                        child: const Row(
+                        child: Row(
                           children: [
-                            Icon(Icons.menu, color: Colors.white, size: 24),
-                            SizedBox(width: 16),
-                            Text(
-                              'Admin OSIS',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                            const Icon(
+                              Icons.menu,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 16),
+                            const Expanded(
+                              child: Text(
+                                'Admin OSIS',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
+                            ),
+                            IconButton(
+                              onPressed:
+                                  _isLoggingOut ? null : _logout,
+                              icon: const Icon(
+                                Icons.logout_rounded,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                              tooltip: 'Logout',
                             ),
                           ],
                         ),
@@ -57,7 +136,10 @@ class DashboardAdminPage extends StatelessWidget {
                             // Banner Welcome
                             Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                                horizontal: 16,
+                              ),
                               decoration: BoxDecoration(
                                 color: cardGreyBg,
                                 borderRadius: BorderRadius.circular(16),
@@ -84,50 +166,91 @@ class DashboardAdminPage extends StatelessWidget {
                                 ],
                               ),
                             ),
+
                             const SizedBox(height: 16),
 
                             // Grid Stats 2x2
                             Row(
                               children: [
-                                Expanded(child: _buildStatCard(Icons.emoji_events, 'Total Peserta', '45', Colors.amber)),
+                                Expanded(
+                                  child: _buildStatCard(
+                                    Icons.emoji_events,
+                                    'Total Peserta',
+                                    '45',
+                                    Colors.yellow,
+                                  ),
+                                ),
                                 const SizedBox(width: 12),
-                                Expanded(child: _buildStatCard(Icons.person_search, 'Guru Juri', '7', Colors.amber)),
+                                Expanded(
+                                  child: _buildStatCard(
+                                    Icons.person_search,
+                                    'Guru Juri',
+                                    '7',
+                                    Colors.yellow,
+                                  ),
+                                ),
                               ],
                             ),
+
                             const SizedBox(height: 12),
+
                             Row(
                               children: [
-                                Expanded(child: _buildStatCard(Icons.edit_calendar, 'Jadwal Tampil', '9', Colors.amber)),
+                                Expanded(
+                                  child: _buildStatCard(
+                                    Icons.edit_calendar,
+                                    'Jadwal Tampil',
+                                    '9',
+                                    Colors.yellow,
+                                  ),
+                                ),
                                 const SizedBox(width: 12),
-                                Expanded(child: _buildStatCard(Icons.school, 'Kelas & Jurusan', '12', Colors.amber)),
+                                Expanded(
+                                  child: _buildStatCard(
+                                    Icons.school,
+                                    'Kelas & Jurusan',
+                                    '12',
+                                    Colors.yellow,
+                                  ),
+                                ),
                               ],
                             ),
+
                             const SizedBox(height: 20),
 
                             // Menu Buttons
-                            _buildMenuButton(
-                              icon: Icons.person,
-                              title: 'Kelola Data Siswa',
-                              showArrow: false,
-                              onTap: () {
-                                Navigator.pushNamed(context, '/data_siswa');
-                              },
-                            ),
+                           _buildMenuButton(
+  icon: Icons.person,
+  title: 'Kelola Data Siswa',
+  showArrow: true,
+  onTap: () {
+    Navigator.pushNamed(
+      context,
+      '/data_siswa',
+    );
+  },
+),
+
                             const SizedBox(height: 10),
+
                             _buildMenuButton(
                               icon: Icons.person_outline,
                               title: 'Kelola Guru Juri',
                               showArrow: true,
                               onTap: () {},
                             ),
+
                             const SizedBox(height: 10),
+
                             _buildMenuButton(
                               icon: Icons.calendar_month_outlined,
                               title: 'Kelola Jadwal Penampilan',
                               showArrow: true,
                               onTap: () {},
                             ),
+
                             const SizedBox(height: 10),
+
                             _buildMenuButton(
                               icon: Icons.search,
                               title: 'Lihat Semua Data',
@@ -135,7 +258,7 @@ class DashboardAdminPage extends StatelessWidget {
                               onTap: () {},
                             ),
 
-                            const SizedBox(height: 70), // Padding untuk Bottom Navigation Bar
+                            const SizedBox(height: 70),
                           ],
                         ),
                       ),
@@ -163,9 +286,27 @@ class DashboardAdminPage extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildNavItem(Icons.home_outlined, 'Beranda', primaryPurple, true, () {}),
-                        _buildNavItem(Icons.menu_book_outlined, 'Data', Colors.grey, false, () {}),
-                        _buildNavItem(Icons.calendar_month_outlined, 'Jadwal', Colors.grey, false, () {}),
+                        _buildNavItem(
+                          Icons.home_outlined,
+                          'Beranda',
+                          primaryPurple,
+                          true,
+                          () {},
+                        ),
+                        _buildNavItem(
+                          Icons.menu_book_outlined,
+                          'Data',
+                          Colors.grey,
+                          false,
+                          () {},
+                        ),
+                        _buildNavItem(
+                          Icons.calendar_month_outlined,
+                          'Jadwal',
+                          Colors.grey,
+                          false,
+                          () {},
+                        ),
                       ],
                     ),
                   ),
@@ -179,9 +320,17 @@ class DashboardAdminPage extends StatelessWidget {
   }
 
   // Widget Kartu Statistik
-  Widget _buildStatCard(IconData icon, String title, String value, Color iconColor) {
+  Widget _buildStatCard(
+    IconData icon,
+    String title,
+    String value,
+    Color iconColor,
+  ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 12,
+      ),
       decoration: BoxDecoration(
         color: cardGreyBg,
         borderRadius: BorderRadius.circular(16),
@@ -218,7 +367,7 @@ class DashboardAdminPage extends StatelessWidget {
     );
   }
 
-  // Widget Tombol Menu Berbentuk Card Outlined
+  // Widget Tombol Menu
   Widget _buildMenuButton({
     required IconData icon,
     required String title,
@@ -229,11 +378,17 @@ class DashboardAdminPage extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: textDark.withValues(alpha: 0.4), width: 1.2),
+          border: Border.all(
+            color: textDark.withValues(alpha: 0.4),
+            width: 1.2,
+          ),
         ),
         child: Row(
           children: [
@@ -250,7 +405,11 @@ class DashboardAdminPage extends StatelessWidget {
               ),
             ),
             if (showArrow)
-              const Icon(Icons.arrow_forward_ios, size: 14, color: textDark),
+              const Icon(
+                Icons.arrow_forward_ios,
+                size: 14,
+                color: textDark,
+              ),
           ],
         ),
       ),
@@ -258,7 +417,13 @@ class DashboardAdminPage extends StatelessWidget {
   }
 
   // Widget Item Navigation Bar
-  Widget _buildNavItem(IconData icon, String label, Color color, bool isSelected, VoidCallback onTap) {
+  Widget _buildNavItem(
+    IconData icon,
+    String label,
+    Color color,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       child: Column(
@@ -270,7 +435,8 @@ class DashboardAdminPage extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 9,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontWeight:
+                  isSelected ? FontWeight.bold : FontWeight.normal,
               color: color,
             ),
           ),

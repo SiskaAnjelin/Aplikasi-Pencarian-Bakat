@@ -9,8 +9,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  final supabase = Supabase.instance.client;
 
   bool _obscurePassword = true;
   bool _isLoading = false;
@@ -21,22 +23,20 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  // Fungsi Login Supabase
+  // LOGIN SUPABASE
   Future<void> _handleLogin() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+    final email = _usernameController.text.trim();
+    final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email dan Password tidak boleh kosong!'),
-          backgroundColor: Colors.red,
-        ),
+      _showMessage(
+        'Email dan password tidak boleh kosong!',
+        Colors.red,
       );
       return;
     }
@@ -46,91 +46,90 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final supabase = Supabase.instance.client;
-
-      // Login menggunakan Supabase Authentication
-      final response = await supabase.auth.signInWithPassword(
+      // 1. Login melalui Supabase Authentication
+      final authResponse = await supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
 
-      final user = response.user;
-
+      final user = authResponse.user;
       if (user == null) {
-        throw Exception('Pengguna tidak ditemukan!');
+        throw Exception('Akun tidak ditemukan.');
       }
 
       final userId = user.id;
 
-      String? dashboard;
-
-      // Cek role Siswa
+      // 2. Cek user_id pada tabel siswa
       final siswa = await supabase
           .from('siswa')
-          .select('user_id')
+          .select()
           .eq('user_id', userId)
           .maybeSingle();
 
       if (siswa != null) {
-        dashboard = '/dashboard_siswa';
-      } else {
-        // Cek role Guru
-        final guru = await supabase
-            .from('guru')
-            .select('user_id')
-            .eq('user_id', userId)
-            .maybeSingle();
-
-        if (guru != null) {
-          dashboard = '/dashboard_guru';
-        } else {
-          // Cek role Admin
-          final admin = await supabase
-              .from('admin')
-              .select('user_id')
-              .eq('user_id', userId)
-              .maybeSingle();
-
-          if (admin != null) {
-            dashboard = '/dashboard_admin';
-          }
-        }
-      }
-
-      if (!mounted) return;
-
-      // Jika role ditemukan
-      if (dashboard != null) {
-        Navigator.pushReplacementNamed(context, dashboard);
-      } else {
-        await supabase.auth.signOut();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Akun belum terdaftar sebagai Siswa, Guru, atau Admin!',
-            ),
-            backgroundColor: Colors.red,
-          ),
+        if (!mounted) return;
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/dashboard_siswa',
+          (route) => false,
         );
+        return;
       }
-    } on AuthException catch (e) {
-      if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Login gagal: ${e.message}'),
-          backgroundColor: Colors.red,
-        ),
+      // 3. Cek user_id pada tabel guru
+      final guru = await supabase
+          .from('guru')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (guru != null) {
+        if (!mounted) return;
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/dashboard_guru',
+          (route) => false,
+        );
+        return;
+      }
+
+      // 4. Cek user_id pada tabel admin
+      final admin = await supabase
+          .from('admin')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (admin != null) {
+        if (!mounted) return;
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/dashboard_admin',
+          (route) => false,
+        );
+        return;
+      }
+
+      // 5. Jika user_id tidak ada di ketiga tabel role
+      await supabase.auth.signOut();
+      throw Exception(
+        'Akun terdaftar di Auth, tetapi data profil role tidak ditemukan di database.',
+      );
+
+    } on AuthException catch (e) {
+      _showMessage(
+        'Login gagal: ${e.message}',
+        Colors.red,
+      );
+    } on PostgrestException catch (e) {
+      _showMessage(
+        'Gagal mengambil data Supabase: ${e.message}',
+        Colors.red,
       );
     } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Terjadi kesalahan: $e'),
-          backgroundColor: Colors.red,
-        ),
+      _showMessage(
+        e.toString().replaceFirst('Exception: ', ''),
+        Colors.red,
       );
     } finally {
       if (mounted) {
@@ -139,6 +138,19 @@ class _LoginPageState extends State<LoginPage> {
         });
       }
     }
+  }
+
+  // NOTIFIKASI
+  void _showMessage(String message, Color color) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -158,9 +170,12 @@ class _LoginPageState extends State<LoginPage> {
             ),
             child: Stack(
               children: [
+                // FORM LOGIN
                 Positioned.fill(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                    ),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         return SingleChildScrollView(
@@ -170,8 +185,10 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             child: IntrinsicHeight(
                               child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.center,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     'Selamat Datang!',
@@ -196,17 +213,23 @@ class _LoginPageState extends State<LoginPage> {
 
                                   const SizedBox(height: 22),
 
-                                  // Email
+                                  // EMAIL
                                   TextField(
-                                    controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
+                                    controller: _usernameController,
+                                    keyboardType:
+                                        TextInputType.emailAddress,
+                                    textInputAction:
+                                        TextInputAction.next,
+                                    autofillHints: const [
+                                      AutofillHints.email,
+                                    ],
                                     decoration: InputDecoration(
                                       hintText: 'Email',
                                       hintStyle: const TextStyle(
                                         fontSize: 14,
                                       ),
                                       prefixIcon: const Icon(
-                                        Icons.email,
+                                        Icons.email_outlined,
                                         size: 16,
                                       ),
                                       contentPadding:
@@ -217,7 +240,8 @@ class _LoginPageState extends State<LoginPage> {
                                         borderRadius:
                                             BorderRadius.circular(30),
                                       ),
-                                      enabledBorder: OutlineInputBorder(
+                                      enabledBorder:
+                                          OutlineInputBorder(
                                         borderRadius:
                                             BorderRadius.circular(30),
                                         borderSide: BorderSide(
@@ -230,10 +254,20 @@ class _LoginPageState extends State<LoginPage> {
 
                                   const SizedBox(height: 20),
 
-                                  // Password
+                                  // PASSWORD
                                   TextField(
                                     controller: _passwordController,
                                     obscureText: _obscurePassword,
+                                    textInputAction:
+                                        TextInputAction.done,
+                                    autofillHints: const [
+                                      AutofillHints.password,
+                                    ],
+                                    onSubmitted: (_) {
+                                      if (!_isLoading) {
+                                        _handleLogin();
+                                      }
+                                    },
                                     decoration: InputDecoration(
                                       hintText: 'Password',
                                       hintStyle: const TextStyle(
@@ -265,7 +299,8 @@ class _LoginPageState extends State<LoginPage> {
                                         borderRadius:
                                             BorderRadius.circular(30),
                                       ),
-                                      enabledBorder: OutlineInputBorder(
+                                      enabledBorder:
+                                          OutlineInputBorder(
                                         borderRadius:
                                             BorderRadius.circular(30),
                                         borderSide: BorderSide(
@@ -278,16 +313,20 @@ class _LoginPageState extends State<LoginPage> {
 
                                   const SizedBox(height: 32),
 
-                                  // Tombol Login
+                                  // TOMBOL LOGIN
                                   SizedBox(
                                     width: double.infinity,
                                     height: 38,
                                     child: ElevatedButton(
-                                      onPressed:
-                                          _isLoading ? null : _handleLogin,
-                                      style: ElevatedButton.styleFrom(
+                                      onPressed: _isLoading
+                                          ? null
+                                          : _handleLogin,
+                                      style:
+                                          ElevatedButton.styleFrom(
                                         backgroundColor: purple,
                                         foregroundColor: Colors.white,
+                                        disabledBackgroundColor:
+                                            purple.withOpacity(0.6),
                                         elevation: 0,
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
@@ -298,7 +337,8 @@ class _LoginPageState extends State<LoginPage> {
                                           ? const SizedBox(
                                               width: 20,
                                               height: 20,
-                                              child: CircularProgressIndicator(
+                                              child:
+                                                  CircularProgressIndicator(
                                                 color: Colors.white,
                                                 strokeWidth: 2,
                                               ),
@@ -307,19 +347,20 @@ class _LoginPageState extends State<LoginPage> {
                                               'Login',
                                               style: TextStyle(
                                                 fontSize: 14,
-                                                fontWeight: FontWeight.bold,
+                                                fontWeight:
+                                                    FontWeight.bold,
                                               ),
                                             ),
                                     ),
                                   ),
 
-                                  const SizedBox(height: 6),
-                                  const SizedBox(height: 12),
+                                  const SizedBox(height: 18),
 
-                                  // Hubungi Admin
+                                  // HUBUNGI ADMIN
                                   Center(
                                     child: Wrap(
-                                      alignment: WrapAlignment.center,
+                                      alignment:
+                                          WrapAlignment.center,
                                       spacing: 4,
                                       runSpacing: 4,
                                       children: [
@@ -335,7 +376,8 @@ class _LoginPageState extends State<LoginPage> {
                                           style: TextStyle(
                                             color: Colors.black,
                                             fontSize: 11,
-                                            fontWeight: FontWeight.bold,
+                                            fontWeight:
+                                                FontWeight.bold,
                                           ),
                                         ),
                                       ],
@@ -353,7 +395,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
-                // Lingkaran ungu kanan atas
+                // LINGKARAN UNGU
                 Positioned(
                   top: 15,
                   right: -35,
@@ -367,7 +409,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
 
-                // Bintang kuning kiri bawah
+                // BINTANG KUNING
                 Positioned(
                   bottom: 115,
                   left: 25,

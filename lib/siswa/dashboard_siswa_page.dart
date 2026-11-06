@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DashboardSiswaPage extends StatefulWidget {
   const DashboardSiswaPage({super.key});
@@ -16,6 +17,93 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
   static const Color lightPurple = Color(0xFFE5DFFF);
 
   int selectedIndex = 0;
+  bool _isLoggingOut = false;
+
+  // ================= FUNGSI LOGOUT =================
+
+  Future<void> _logout() async {
+    if (_isLoggingOut) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Text(
+          'Konfirmasi Logout',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: darkPurple,
+          ),
+        ),
+        content: const Text(
+          'Apakah kamu yakin ingin keluar dari akun Niskala?',
+          style: TextStyle(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext, false);
+            },
+            child: const Text(
+              'Batal',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext, true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: purple,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    setState(() {
+      _isLoggingOut = true;
+    });
+
+    try {
+      // Keluar dari Supabase Authentication
+      await Supabase.instance.client.auth.signOut();
+
+      if (!mounted) return;
+
+      // Kembali ke halaman login
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal logout: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoggingOut = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,14 +139,33 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
 
                       const SizedBox(height: 20),
 
-                      // JUDUL
-                      const Text(
-                        'Dashboard Siswa',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          color: darkPurple,
-                        ),
+                      // JUDUL DAN TOMBOL LOGOUT
+                      Row(
+                        mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Dashboard Siswa',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                color: darkPurple,
+                              ),
+                            ),
+                          ),
+
+                          IconButton(
+                            onPressed:
+                                _isLoggingOut ? null : _logout,
+                            tooltip: 'Logout',
+                            icon: const Icon(
+                              Icons.logout_rounded,
+                              color: purple,
+                              size: 22,
+                            ),
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: 25),
@@ -91,12 +198,9 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                       Center(
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Halaman Daftar Bakat akan dibuat selanjutnya.',
-                                ),
-                              ),
+                            Navigator.pushNamed(
+                              context,
+                              '/daftar_bakat',
                             );
                           },
                           icon: const Icon(
@@ -197,14 +301,14 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                     ),
 
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceAround,
                       children: [
 
                         _buildNavItem(
                           Icons.home,
                           'Beranda',
-                          purple,
-                          true,
+                          0,
                           () {
                             setState(() {
                               selectedIndex = 0;
@@ -215,8 +319,7 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                         _buildNavItem(
                           Icons.assignment_outlined,
                           'Bakat',
-                          Colors.grey,
-                          false,
+                          1,
                           () {
                             setState(() {
                               selectedIndex = 1;
@@ -228,8 +331,7 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                         _buildNavItem(
                           Icons.chat_bubble_outline,
                           'Detail',
-                          Colors.grey,
-                          false,
+                          2,
                           () {
                             setState(() {
                               selectedIndex = 2;
@@ -241,8 +343,7 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                         _buildNavItem(
                           Icons.person_outline,
                           'Profil',
-                          Colors.grey,
-                          false,
+                          3,
                           () {
                             setState(() {
                               selectedIndex = 3;
@@ -250,12 +351,10 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                             _showMessage(context);
                           },
                         ),
-
                       ],
                     ),
                   ),
                 ),
-
               ],
             ),
           ),
@@ -323,7 +422,6 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                     color: Colors.grey,
                   ),
                 ),
-
               ],
             ),
           ),
@@ -353,7 +451,6 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
               ),
             ),
           ),
-
         ],
       ),
     );
@@ -364,10 +461,11 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
   Widget _buildNavItem(
     IconData icon,
     String label,
-    Color color,
-    bool isSelected,
+    int index,
     VoidCallback onTap,
   ) {
+    final bool isSelected = selectedIndex == index;
+
     return InkWell(
       onTap: onTap,
 
@@ -378,7 +476,7 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
           Icon(
             icon,
             size: 20,
-            color: color,
+            color: isSelected ? purple : Colors.grey,
           ),
 
           const SizedBox(height: 2),
@@ -390,10 +488,9 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
               fontWeight: isSelected
                   ? FontWeight.bold
                   : FontWeight.normal,
-              color: color,
+              color: isSelected ? purple : Colors.grey,
             ),
           ),
-
         ],
       ),
     );

@@ -1,11 +1,70 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class DashboardGuruPage extends StatelessWidget {
+class DashboardGuruPage extends StatefulWidget {
   const DashboardGuruPage({super.key});
 
+  @override
+  State<DashboardGuruPage> createState() => _DashboardGuruPageState();
+}
+
+class _DashboardGuruPageState extends State<DashboardGuruPage> {
   static const Color purple = Color(0xFF6C5CFF);
   static const Color yellow = Color(0xFFFFC857);
   static const Color darkPurple = Color(0xFF29264F);
+
+  bool _isLoggingOut = false;
+
+  Future<void> _logout() async {
+    final konfirmasi = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Logout'),
+        content: const Text('Apakah kamu yakin ingin keluar dari akun?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (konfirmasi != true || !mounted) return;
+
+    setState(() {
+      _isLoggingOut = true;
+    });
+
+    try {
+      await Supabase.instance.client.auth.signOut();
+
+      if (!mounted) return;
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoggingOut = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal logout: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,24 +83,43 @@ class DashboardGuruPage extends StatelessWidget {
             ),
             child: Stack(
               children: [
-                // Konten utama dengan scroll
                 SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 24,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 20),
-                      // Judul
-                      const Text(
-                        'Dashboard Guru',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          color: darkPurple,
-                        ),
+
+                      // Judul dan tombol Logout
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Dashboard Guru',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w900,
+                              color: darkPurple,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: _isLoggingOut ? null : _logout,
+                            icon: const Icon(
+                              Icons.logout_rounded,
+                              color: Colors.red,
+                              size: 22,
+                            ),
+                            tooltip: 'Logout',
+                          ),
+                        ],
                       ),
+
                       const SizedBox(height: 8),
-                      Text(
+
+                      const Text(
                         'Selamat Datang,\nPak Aris!',
                         style: TextStyle(
                           fontSize: 14,
@@ -50,21 +128,36 @@ class DashboardGuruPage extends StatelessWidget {
                           height: 1.3,
                         ),
                       ),
-                      const SizedBox(height: 6),
 
-                      // Statistik Cards (Row 3 Kotak)
+                      const SizedBox(height: 12),
+
+                      // Statistik Cards
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildStatCard('120', 'Total Siswa', purple, Colors.white),
-                          _buildStatCard('32', 'Status Aktif', yellow, darkPurple),
-                          _buildStatCard('11', 'Kegiatan', purple, Colors.white),
+                          _buildStatCard(
+                            '120',
+                            'Total Siswa',
+                            purple,
+                            Colors.white,
+                          ),
+                          _buildStatCard(
+                            '32',
+                            'Status Aktif',
+                            yellow,
+                            darkPurple,
+                          ),
+                          _buildStatCard(
+                            '11',
+                            'Kegiatan',
+                            purple,
+                            Colors.white,
+                          ),
                         ],
                       ),
 
                       const SizedBox(height: 24),
 
-                      // Bagian Potensi Terbaru
                       const Text(
                         'Potensi Terbaru',
                         style: TextStyle(
@@ -73,9 +166,25 @@ class DashboardGuruPage extends StatelessWidget {
                           color: darkPurple,
                         ),
                       ),
+
                       const SizedBox(height: 12),
 
-                      // Item List 1: Alya Nasmi
+                      // Item Potensi 1 (Bisa diklik untuk buka Detail Bakat)
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/detail_bakat');
+                        },
+                        child: _buildPotensiItem(
+                          'Noufal Zaidan',
+                          'Bakat Seni (Desain)',
+                          'Berkembang',
+                          yellow,
+                          darkPurple,
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
                       _buildPotensiItem(
                         'Alya Nasmi',
                         'Bakat Public Speaking',
@@ -83,9 +192,9 @@ class DashboardGuruPage extends StatelessWidget {
                         yellow,
                         darkPurple,
                       ),
+
                       const SizedBox(height: 10),
 
-                      // Item List 2: Siska Anjelin
                       _buildPotensiItem(
                         'Siska Anjelin',
                         'Bakat Fotografi',
@@ -94,12 +203,12 @@ class DashboardGuruPage extends StatelessWidget {
                         darkPurple,
                       ),
 
-                      const SizedBox(height: 70), // Spasi bawah untuk Bottom Nav
+                      const SizedBox(height: 70),
                     ],
                   ),
                 ),
 
-                // Bottom Navigation Bar Kustom
+                // Bottom Navigation Bar
                 Positioned(
                   bottom: 0,
                   left: 0,
@@ -110,7 +219,7 @@ class DashboardGuruPage extends StatelessWidget {
                       color: Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: Colors.black.withOpacity(0.05),
                           blurRadius: 10,
                           offset: const Offset(0, -5),
                         ),
@@ -119,12 +228,36 @@ class DashboardGuruPage extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildNavItem(Icons.home, 'Beranda', purple, true, () {}),
-                        _buildNavItem(Icons.group, 'Daftar Siswa', Colors.grey, false, () {
-                          Navigator.pushNamed(context, '/data_siswa');
-                        }),
-                        _buildNavItem(Icons.history, 'Riwayat', Colors.grey, false, () {}),
-                        _buildNavItem(Icons.person, 'Profil', Colors.grey, false, () {}),
+                        _buildNavItem(
+                          Icons.home,
+                          'Beranda',
+                          purple,
+                          true,
+                          () {},
+                        ),
+                        _buildNavItem(
+                          Icons.group,
+                          'Daftar Siswa',
+                          Colors.grey,
+                          false,
+                          () {
+                            Navigator.pushNamed(context, '/data_siswa');
+                          },
+                        ),
+                        _buildNavItem(
+                          Icons.history,
+                          'Riwayat',
+                          Colors.grey,
+                          false,
+                          () {},
+                        ),
+                        _buildNavItem(
+                          Icons.person,
+                          'Profil',
+                          Colors.grey,
+                          false,
+                          () {},
+                        ),
                       ],
                     ),
                   ),
@@ -137,7 +270,12 @@ class DashboardGuruPage extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(String number, String label, Color bgColor, Color textColor) {
+  Widget _buildStatCard(
+    String number,
+    String label,
+    Color bgColor,
+    Color textColor,
+  ) {
     return Container(
       width: 86,
       height: 86,
@@ -172,20 +310,33 @@ class DashboardGuruPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPotensiItem(String name, String bakat, String status, Color badgeColor, Color textColor) {
+  Widget _buildPotensiItem(
+    String name,
+    String bakat,
+    String status,
+    Color badgeColor,
+    Color textColor,
+  ) {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: const Color(0xFFF9F9F9),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200, width: 1),
+        border: Border.all(
+          color: Colors.grey.shade200,
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
           const CircleAvatar(
             radius: 20,
             backgroundColor: Colors.grey,
-            child: Icon(Icons.person, color: Colors.white, size: 24),
+            child: Icon(
+              Icons.person,
+              color: Colors.white,
+              size: 24,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -212,7 +363,10 @@ class DashboardGuruPage extends StatelessWidget {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 4,
+            ),
             decoration: BoxDecoration(
               color: badgeColor,
               borderRadius: BorderRadius.circular(20),
@@ -231,7 +385,13 @@ class DashboardGuruPage extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, Color color, bool isSelected, VoidCallback onTap) {
+  Widget _buildNavItem(
+    IconData icon,
+    String label,
+    Color color,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       child: Column(
