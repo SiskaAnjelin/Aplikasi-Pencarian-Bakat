@@ -1,276 +1,180 @@
 import 'package:flutter/material.dart';
 
-class DataSiswaPage extends StatelessWidget {
+class DataSiswaPage extends StatefulWidget {
   const DataSiswaPage({super.key});
 
-  static const Color purple = Color(0xFF6C5CFF);
-  static const Color yellow = Color(0xFFFFC857);
-  static const Color darkPurple = Color(0xFF29264F);
+  @override
+  State<DataSiswaPage> createState() => _DataSiswaPageState();
+}
+
+class _DataSiswaPageState extends State<DataSiswaPage> {
+  final TextEditingController _searchController = TextEditingController();
+
+  final List<Map<String, String>> _siswaList = [
+    {
+      "nama": "Noufal Zaidan",
+      "kelas": "XI RPL 1",
+      "bakat": "Menyanyi",
+    },
+    {
+      "nama": "Alya Nayumi",
+      "kelas": "XI RPL 2",
+      "bakat": "Menari",
+    },
+    {
+      "nama": "Rizky Maulana",
+      "kelas": "X RPL 1",
+      "bakat": "Coding",
+    },
+    {
+      "nama": "Sinta Angelia",
+      "kelas": "XI TKJ 1",
+      "bakat": "Menggambar",
+    },
+    {
+      "nama": "Dimas Pratama",
+      "kelas": "X TKJ 2",
+      "bakat": "Olahraga",
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Center(
-          child: Container(
-            width: 320,
-            height: 680,
-            margin: const EdgeInsets.all(16),
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: Stack(
-              children: [
-                // Aksen lingkaran ungu di kanan atas
-                Positioned(
-                  top: -20,
-                  right: -20,
-                  child: Container(
-                    width: 75,
-                    height: 75,
-                    decoration: const BoxDecoration(
-                      color: purple,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-
-                // Aksen lingkaran kuning di kiri bawah
-                Positioned(
-                  left: -30,
-                  bottom: 30,
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    decoration: const BoxDecoration(
-                      color: yellow,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-
-                // Konten Utama
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header (Tombol Back & Judul)
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back, size: 18),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            onPressed: () {
-                              Navigator.pop(context);
-                            },
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'Data Siswa',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              color: darkPurple,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Kotak Pencarian (Search Bar)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF9F9F9),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.grey.shade300, width: 0.8),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.menu, size: 16, color: Colors.grey.shade600),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: TextField(
-                                style: const TextStyle(fontSize: 11),
-                                decoration: InputDecoration(
-                                  hintText: 'Cari nama siswa...',
-                                  hintStyle: TextStyle(fontSize: 11, color: Colors.grey.shade400),
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Filter Tombol (Semua & Kelas)
-                      Row(
-                        children: [
-                          _buildFilterButton('Semua', true),
-                          const SizedBox(width: 8),
-                          _buildFilterButton('Kelas', false),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Daftar Siswa (ListView)
-                      Expanded(
-                        child: ListView(
-                          padding: const EdgeInsets.only(bottom: 60),
-                          children: [
-                            _buildStudentItem('Noufal Zaidan', 'XII RPL B', darkPurple),
-                            _buildStudentItem('Alya Nasmi', 'XI RPL B', darkPurple),
-                            _buildStudentItem('Siska Anjelin', 'XII RPL B', darkPurple),
-                            _buildStudentItem('Rizky Maulana', 'X TKJ D', darkPurple),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Bottom Navigation Bar Kustom
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, -5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildNavItem(Icons.home, 'Beranda', Colors.grey, false, () {
-                          Navigator.pop(context);
-                        }),
-                        _buildNavItem(Icons.group, 'Daftar Siswa', purple, true, () {}),
-                        _buildNavItem(Icons.history, 'Riwayat', Colors.grey, false, () {}),
-                        _buildNavItem(Icons.person, 'Profil', Colors.grey, false, () {}),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+      backgroundColor: const Color(0xFFF8F9FC),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Color(0xFF1A1A2E)),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          "Data Siswa",
+          style: TextStyle(
+            color: Color(0xFF1A1A2E),
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
           ),
         ),
+        centerTitle: true,
       ),
-    );
-  }
-
-  Widget _buildFilterButton(String title, bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isSelected ? purple : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: purple, width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+      body: Column(
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.white : purple,
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: "Cari nama siswa...",
+                  hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                  prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
             ),
           ),
-          const SizedBox(width: 4),
-          Icon(
-            Icons.keyboard_arrow_down,
-            size: 14,
-            color: isSelected ? Colors.white : purple,
+
+          // List Siswa
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: _siswaList.length,
+              itemBuilder: (context, index) {
+                final siswa = _siswaList[index];
+                return _buildSiswaCard(siswa);
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStudentItem(String name, String kelas, Color textColor) {
+  Widget _buildSiswaCard(Map<String, String> siswa) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200, width: 1),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          const CircleAvatar(
-            radius: 18,
-            backgroundColor: Colors.grey,
-            child: Icon(Icons.person, color: Colors.white, size: 20),
+          CircleAvatar(
+            radius: 26,
+            backgroundColor: const Color(0xFFE8E7FF),
+            child: Text(
+              siswa["nama"]![0],
+              style: const TextStyle(
+                color: Color(0xFF6C63FF),
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
+                  siswa["nama"]!,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: Color(0xFF1A1A2E),
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
-                  kelas,
+                  siswa["kelas"]!,
                   style: TextStyle(
-                    fontSize: 9,
-                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                    color: Colors.grey[600],
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(
-            Icons.chevron_right,
-            size: 18,
-            color: Colors.black54,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, Color color, bool isSelected, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: color,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF6C63FF).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              siswa["bakat"]!,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF6C63FF),
+              ),
             ),
           ),
+          const SizedBox(width: 8),
+          const Icon(Icons.chevron_right, color: Colors.grey, size: 22),
         ],
       ),
     );

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -28,7 +29,10 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+<<<<<<< HEAD
   // LOGIN SUPABASE
+=======
+>>>>>>> origin/main
   Future<void> _handleLogin() async {
     final email = _usernameController.text.trim();
     final password = _passwordController.text;
@@ -46,8 +50,15 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
+<<<<<<< HEAD
       // 1. Login melalui Supabase Authentication
       final authResponse = await supabase.auth.signInWithPassword(
+=======
+      final supabase = Supabase.instance.client;
+
+      // Login Supabase Authentication
+      final response = await supabase.auth.signInWithPassword(
+>>>>>>> origin/main
         email: email,
         password: password,
       );
@@ -59,19 +70,84 @@ class _LoginPageState extends State<LoginPage> {
 
       final userId = user.id;
 
+<<<<<<< HEAD
       // 2. Cek user_id pada tabel siswa
+=======
+      // Debug UID akun
+      debugPrint('UID LOGIN: $userId');
+      debugPrint('EMAIL LOGIN: ${user.email}');
+
+      String? dashboard;
+
+      // Cek role Siswa
+>>>>>>> origin/main
       final siswa = await supabase
           .from('siswa')
           .select()
           .eq('user_id', userId)
           .maybeSingle();
 
+      debugPrint('DATA SISWA: $siswa');
+
       if (siswa != null) {
+<<<<<<< HEAD
         if (!mounted) return;
         Navigator.pushNamedAndRemoveUntil(
           context,
           '/dashboard_siswa',
           (route) => false,
+=======
+        dashboard = '/dashboard_siswa';
+      } else {
+        // Cek role Guru
+        final guru = await supabase
+            .from('guru')
+            .select('user_id')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        debugPrint('DATA GURU: $guru');
+
+        if (guru != null) {
+          dashboard = '/dashboard_guru';
+        } else {
+          // Cek role Admin menggunakan id_admin
+          final admin = await supabase
+              .from('admin')
+              .select('id_admin')
+              .eq('id_admin', userId)
+              .maybeSingle();
+
+          debugPrint('DATA ADMIN: $admin');
+
+          if (admin != null) {
+            dashboard = '/dashboard_admin';
+          }
+        }
+      }
+
+      if (!mounted) return;
+
+      if (dashboard != null) {
+        debugPrint('DASHBOARD: $dashboard');
+
+        Navigator.pushReplacementNamed(
+          context,
+          dashboard,
+        );
+      } else {
+        await supabase.auth.signOut();
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Akun belum terdaftar sebagai Siswa, Guru, atau Admin!',
+            ),
+            backgroundColor: Colors.red,
+          ),
+>>>>>>> origin/main
         );
         return;
       }
@@ -127,9 +203,21 @@ class _LoginPageState extends State<LoginPage> {
         Colors.red,
       );
     } catch (e) {
+<<<<<<< HEAD
       _showMessage(
         e.toString().replaceFirst('Exception: ', ''),
         Colors.red,
+=======
+      debugPrint('ERROR LOGIN: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Terjadi kesalahan: $e'),
+          backgroundColor: Colors.red,
+        ),
+>>>>>>> origin/main
       );
     } finally {
       if (mounted) {
@@ -215,6 +303,7 @@ class _LoginPageState extends State<LoginPage> {
 
                                   // EMAIL
                                   TextField(
+<<<<<<< HEAD
                                     controller: _usernameController,
                                     keyboardType:
                                         TextInputType.emailAddress,
@@ -223,6 +312,11 @@ class _LoginPageState extends State<LoginPage> {
                                     autofillHints: const [
                                       AutofillHints.email,
                                     ],
+=======
+                                    controller: _emailController,
+                                    keyboardType:
+                                        TextInputType.emailAddress,
+>>>>>>> origin/main
                                     decoration: InputDecoration(
                                       hintText: 'Email',
                                       hintStyle: const TextStyle(

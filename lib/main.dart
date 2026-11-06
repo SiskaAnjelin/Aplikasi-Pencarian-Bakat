@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -23,6 +24,8 @@ import 'admin/dashboard_admin_page.dart';
 import 'admin/detail_jadwal_page.dart' as admin_jadwal;
 import 'admin/kelola_siswa_page.dart';
 import 'admin/tambah_siswa_page.dart';
+import 'admin/kelola_guru_page.dart';
+import 'admin/laporan_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,7 +46,6 @@ class NiskalaApp extends StatelessWidget {
     return MaterialApp(
       title: 'Niskala - Aplikasi Pencarian Bakat',
       debugShowCheckedModeBanner: false,
-
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -51,9 +53,7 @@ class NiskalaApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Colors.white,
       ),
-
       home: const SplashPage(),
-
       routes: {
         '/login': (context) => const LoginPage(),
 
@@ -97,10 +97,16 @@ class NiskalaApp extends StatelessWidget {
             const admin_jadwal.DetailJadwalPage(),
 
         '/kelola_siswa': (context) =>
-            const KelolaSiswaPage(),
+            const KelolaSiswaPage(standalone: true),
 
         '/tambah_siswa': (context) =>
             const TambahSiswaPage(),
+
+        '/kelola_guru': (context) =>
+            const KelolaGuruPage(standalone: true),
+
+        '/laporan': (context) =>
+            const LaporanPage(standalone: true),
       },
     );
   }
