@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -26,7 +27,6 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  // Fungsi Login Supabase
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -48,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final supabase = Supabase.instance.client;
 
-      // Login menggunakan Supabase Authentication
+      // Login Supabase Authentication
       final response = await supabase.auth.signInWithPassword(
         email: email,
         password: password,
@@ -62,6 +62,10 @@ class _LoginPageState extends State<LoginPage> {
 
       final userId = user.id;
 
+      // Debug UID akun
+      debugPrint('UID LOGIN: $userId');
+      debugPrint('EMAIL LOGIN: ${user.email}');
+
       String? dashboard;
 
       // Cek role Siswa
@@ -70,6 +74,8 @@ class _LoginPageState extends State<LoginPage> {
           .select('user_id')
           .eq('user_id', userId)
           .maybeSingle();
+
+      debugPrint('DATA SISWA: $siswa');
 
       if (siswa != null) {
         dashboard = '/dashboard_siswa';
@@ -81,15 +87,19 @@ class _LoginPageState extends State<LoginPage> {
             .eq('user_id', userId)
             .maybeSingle();
 
+        debugPrint('DATA GURU: $guru');
+
         if (guru != null) {
           dashboard = '/dashboard_guru';
         } else {
-          // Cek role Admin
+          // Cek role Admin menggunakan id_admin
           final admin = await supabase
               .from('admin')
-              .select('user_id')
-              .eq('user_id', userId)
+              .select('id_admin')
+              .eq('id_admin', userId)
               .maybeSingle();
+
+          debugPrint('DATA ADMIN: $admin');
 
           if (admin != null) {
             dashboard = '/dashboard_admin';
@@ -99,11 +109,17 @@ class _LoginPageState extends State<LoginPage> {
 
       if (!mounted) return;
 
-      // Jika role ditemukan
       if (dashboard != null) {
-        Navigator.pushReplacementNamed(context, dashboard);
+        debugPrint('DASHBOARD: $dashboard');
+
+        Navigator.pushReplacementNamed(
+          context,
+          dashboard,
+        );
       } else {
         await supabase.auth.signOut();
+
+        if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -124,6 +140,8 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     } catch (e) {
+      debugPrint('ERROR LOGIN: $e');
+
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -199,7 +217,8 @@ class _LoginPageState extends State<LoginPage> {
                                   // Email
                                   TextField(
                                     controller: _emailController,
-                                    keyboardType: TextInputType.emailAddress,
+                                    keyboardType:
+                                        TextInputType.emailAddress,
                                     decoration: InputDecoration(
                                       hintText: 'Email',
                                       hintStyle: const TextStyle(
@@ -298,7 +317,8 @@ class _LoginPageState extends State<LoginPage> {
                                           ? const SizedBox(
                                               width: 20,
                                               height: 20,
-                                              child: CircularProgressIndicator(
+                                              child:
+                                                  CircularProgressIndicator(
                                                 color: Colors.white,
                                                 strokeWidth: 2,
                                               ),
@@ -307,7 +327,8 @@ class _LoginPageState extends State<LoginPage> {
                                               'Login',
                                               style: TextStyle(
                                                 fontSize: 14,
-                                                fontWeight: FontWeight.bold,
+                                                fontWeight:
+                                                    FontWeight.bold,
                                               ),
                                             ),
                                     ),

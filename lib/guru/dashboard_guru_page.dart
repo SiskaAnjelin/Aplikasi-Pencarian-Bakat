@@ -1,228 +1,290 @@
 import 'package:flutter/material.dart';
 
-class DashboardGuruPage extends StatelessWidget {
+class DashboardGuruPage extends StatefulWidget {
   const DashboardGuruPage({super.key});
 
-  static const Color purple = Color(0xFF6C5CFF);
-  static const Color yellow = Color(0xFFFFC857);
-  static const Color darkPurple = Color(0xFF29264F);
+  @override
+  State<DashboardGuruPage> createState() => _DashboardGuruPageState();
+}
+
+class _DashboardGuruPageState extends State<DashboardGuruPage> {
+  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFFF8F9FC),
       body: SafeArea(
-        child: Center(
-          child: Container(
-            width: 320,
-            height: 680,
-            margin: const EdgeInsets.all(16),
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: Stack(
-              children: [
-                // Konten utama dengan scroll
-                SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          children: [
+            // Header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              decoration: const BoxDecoration(
+                color: Color(0xFF6C63FF),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(28),
+                  bottomRight: Radius.circular(28),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const SizedBox(height: 20),
-                      // Judul
-                      const Text(
-                        'Dashboard Guru',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          color: darkPurple,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Selamat Datang,\nPak Aris!',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: darkPurple,
-                          height: 1.3,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-
-                      // Statistik Cards (Row 3 Kotak)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildStatCard('120', 'Total Siswa', purple, Colors.white),
-                          _buildStatCard('32', 'Status Aktif', yellow, darkPurple),
-                          _buildStatCard('11', 'Kegiatan', purple, Colors.white),
+                          Text(
+                            "Selamat Datang,",
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "Pak Arif",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
-
-                      const SizedBox(height: 24),
-
-                      // Bagian Potensi Terbaru
-                      const Text(
-                        'Potensi Terbaru',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: darkPurple,
-                        ),
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundColor: Colors.white.withOpacity(0.2),
+                        child: const Icon(Icons.person, color: Colors.white, size: 28),
                       ),
-                      const SizedBox(height: 12),
-
-                      // Item List 1: Alya Nasmi
-                      _buildPotensiItem(
-                        'Alya Nasmi',
-                        'Bakat Public Speaking',
-                        'Berkembang',
-                        yellow,
-                        darkPurple,
-                      ),
-                      const SizedBox(height: 10),
-
-                      // Item List 2: Siska Anjelin
-                      _buildPotensiItem(
-                        'Siska Anjelin',
-                        'Bakat Fotografi',
-                        'Mulai Berkembang',
-                        yellow,
-                        darkPurple,
-                      ),
-
-                      const SizedBox(height: 70), // Spasi bawah untuk Bottom Nav
                     ],
                   ),
-                ),
-
-                // Bottom Navigation Bar Kustom
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, -5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildNavItem(Icons.home, 'Beranda', purple, true, () {}),
-                        _buildNavItem(Icons.group, 'Daftar Siswa', Colors.grey, false, () {
-                          Navigator.pushNamed(context, '/data_siswa');
-                        }),
-                        _buildNavItem(Icons.history, 'Riwayat', Colors.grey, false, () {}),
-                        _buildNavItem(Icons.person, 'Profil', Colors.grey, false, () {}),
-                      ],
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Pantau kegiatan siswa dalam bakat\nyang mereka minati",
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                      height: 1.4,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+
+            const SizedBox(height: 20),
+
+            // Menu Cepat
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  _buildQuickMenu(
+                    icon: Icons.people_alt_outlined,
+                    label: "Data Siswa",
+                    color: const Color(0xFF6C63FF),
+                    onTap: () {
+                      // Navigasi ke Data Siswa
+                    },
+                  ),
+                  const SizedBox(width: 12),
+                  _buildQuickMenu(
+                    icon: Icons.assignment_outlined,
+                    label: "Penilaian",
+                    color: const Color(0xFF4CAF50),
+                    onTap: () {},
+                  ),
+                  const SizedBox(width: 12),
+                  _buildQuickMenu(
+                    icon: Icons.history,
+                    label: "Riwayat",
+                    color: const Color(0xFFFF9800),
+                    onTap: () {},
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 28),
+
+            // Section Title
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Siswa Terbaru",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1A2E),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // List Siswa
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                children: [
+                  _buildStudentCard(
+                    name: "Naufal Zaidan",
+                    className: "XI RPL 1",
+                    talent: "Menyanyi",
+                    imageUrl: null,
+                  ),
+                  _buildStudentCard(
+                    name: "Alya Nayumi",
+                    className: "XI RPL 2",
+                    talent: "Menari",
+                    imageUrl: null,
+                  ),
+                  _buildStudentCard(
+                    name: "Rizky Maulana",
+                    className: "X RPL 1",
+                    talent: "Coding",
+                    imageUrl: null,
+                  ),
+                  _buildStudentCard(
+                    name: "Sinta Angelia",
+                    className: "XI TKJ 1",
+                    talent: "Menggambar",
+                    imageUrl: null,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildQuickMenu({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF333333),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildStatCard(String number, String label, Color bgColor, Color textColor) {
+  Widget _buildStudentCard({
+    required String name,
+    required String className,
+    required String talent,
+    String? imageUrl,
+  }) {
     return Container(
-      width: 86,
-      height: 86,
-      padding: const EdgeInsets.all(8),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: bgColor,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            number,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
-              color: textColor,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              color: textColor,
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildPotensiItem(String name, String bakat, String status, Color badgeColor, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9F9F9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200, width: 1),
-      ),
       child: Row(
         children: [
-          const CircleAvatar(
-            radius: 20,
-            backgroundColor: Colors.grey,
-            child: Icon(Icons.person, color: Colors.white, size: 24),
+          CircleAvatar(
+            radius: 26,
+            backgroundColor: const Color(0xFFE8E7FF),
+            child: Text(
+              name[0],
+              style: const TextStyle(
+                color: Color(0xFF6C63FF),
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: Color(0xFF1A1A2E),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  bakat,
+                  className,
                   style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey.shade600,
+                    fontSize: 12,
+                    color: Colors.grey[600],
                   ),
                 ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: badgeColor,
+              color: const Color(0xFF6C63FF).withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              status,
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.bold,
-                color: textColor,
+              talent,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF6C63FF),
               ),
             ),
           ),
@@ -231,21 +293,45 @@ class DashboardGuruPage extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, Color color, bool isSelected, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: color,
-            ),
+  Widget _buildBottomNav() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+        },
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: const Color(0xFF6C63FF),
+        unselectedItemColor: Colors.grey[400],
+        selectedFontSize: 11,
+        unselectedFontSize: 11,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_rounded),
+            label: "Beranda",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.people_alt_outlined),
+            label: "Siswa",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.assignment_outlined),
+            label: "Penilaian",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: "Profil",
           ),
         ],
       ),
