@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:niskala/main.dart';
+import '../lib/main.dart';
 
 void main() {
   testWidgets('Niskala menampilkan halaman splash',

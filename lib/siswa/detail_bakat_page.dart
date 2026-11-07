@@ -1,15 +1,22 @@
+
 import 'package:flutter/material.dart';
 
-<<<<<<< HEAD
-class DetailBakatPage extends StatefulWidget {
-  const DetailBakatPage({super.key});
+class DetailBakatPage extends StatelessWidget {
+  final String nama;
+  final String kategori;
+  final String status;
 
-  @override
-  State<DetailBakatPage> createState() => _DetailBakatPageState();
-}
+  const DetailBakatPage({
+    super.key,
+    this.nama = 'Menyanyi',
+    this.kategori = 'Seni',
+    this.status = 'Unggul',
+  });
 
-class _DetailBakatPageState extends State<DetailBakatPage> {
-  final List<String> rekomendasiList = [
+  static const Color purple = Color(0xFF6C5CFF);
+  static const Color darkPurple = Color(0xFF202044);
+
+  final List<String> rekomendasiList = const [
     'Ikut lomba menyanyi',
     'Gabung ekstrakurikuler paduan suara',
     'Membuat konten cover lagu',
@@ -19,57 +26,41 @@ class _DetailBakatPageState extends State<DetailBakatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+    final approved = status == 'Disetujui' || status == 'Unggul';
 
-=======
-class DetailBakatSiswaPage extends StatelessWidget {
-  final String nama;
-  final String kategori;
-  final String status;
-
-  const DetailBakatSiswaPage({
-    super.key,
-    this.nama = 'Menggambar',
-    this.kategori = 'Seni',
-    this.status = 'Disetujui',
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final approved = status == 'Disetujui';
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
->>>>>>> origin/main
+
+      // APP BAR
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-<<<<<<< HEAD
           icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.black87,
+            Icons.arrow_back_ios_new,
+            size: 20,
+            color: Color(0xFF1A1A2E),
           ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Detail Bakat',
           style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
+            color: Color(0xFF1A1A2E),
+            fontWeight: FontWeight.w600,
             fontSize: 18,
           ),
         ),
+        centerTitle: true,
       ),
 
+      // BODY
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Ilustrasi bakat
+            // ILUSTRASI BAKAT
             Container(
               height: 180,
               width: double.infinity,
@@ -77,46 +68,55 @@ class DetailBakatSiswaPage extends StatelessWidget {
                 color: const Color(0xFFEDEBFF),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Center(
+              child: Center(
                 child: Icon(
-                  Icons.music_note_rounded,
+                  nama.toLowerCase().contains('nyanyi')
+                      ? Icons.music_note_rounded
+                      : nama.toLowerCase().contains('gambar')
+                          ? Icons.draw_outlined
+                          : nama.toLowerCase().contains('coding')
+                              ? Icons.code
+                              : Icons.star_rounded,
                   size: 85,
-                  color: Color(0xFF6C5CFF),
+                  color: purple,
                 ),
               ),
             ),
 
             const SizedBox(height: 20),
 
-            // Nama bakat dan status
+            // NAMA BAKAT DAN STATUS
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Menyanyi',
-                    style: TextStyle(
+                    nama,
+                    style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF202044),
+                      color: darkPurple,
                     ),
                   ),
                 ),
-
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEDEBFF),
+                    color: approved
+                        ? const Color(0xFFEDEBFF)
+                        : const Color(0xFFFFF1D6),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text(
-                    'Unggul',
+                  child: Text(
+                    status,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF6C5CFF),
+                      color: approved
+                          ? purple
+                          : const Color(0xFFE69500),
                     ),
                   ),
                 ),
@@ -125,9 +125,10 @@ class DetailBakatSiswaPage extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // Deskripsi bakat
+            // DESKRIPSI
             const Text(
-              'Siswa memiliki suara yang bagus dan percaya diri saat tampil di depan umum.',
+              'Terus kembangkan kemampuan dan potensi dirimu '
+              'agar semakin percaya diri dalam menunjukkan bakat.',
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.black54,
@@ -137,7 +138,7 @@ class DetailBakatSiswaPage extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // Informasi kategori
+            // INFORMASI KATEGORI
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -148,14 +149,14 @@ class DetailBakatSiswaPage extends StatelessWidget {
                   color: const Color(0xFFEAEAF2),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.category_outlined,
-                    color: Color(0xFF6C5CFF),
+                    color: purple,
                     size: 24,
                   ),
-                  SizedBox(width: 12),
+                  const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -163,16 +164,16 @@ class DetailBakatSiswaPage extends StatelessWidget {
                         'Kategori Bakat',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey,
+                          color: Colors.grey.shade600,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
-                        'Seni',
-                        style: TextStyle(
+                        kategori,
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF202044),
+                          color: darkPurple,
                         ),
                       ),
                     ],
@@ -183,19 +184,19 @@ class DetailBakatSiswaPage extends StatelessWidget {
 
             const SizedBox(height: 28),
 
-            // Judul rekomendasi
+            // JUDUL REKOMENDASI
             const Text(
               'Rekomendasi Pengembangan Bakat',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF202044),
+                color: darkPurple,
               ),
             ),
 
             const SizedBox(height: 14),
 
-            // Daftar rekomendasi
+            // DAFTAR REKOMENDASI
             ...rekomendasiList.map((rekomendasi) {
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -218,19 +219,17 @@ class DetailBakatSiswaPage extends StatelessWidget {
                       child: const Icon(
                         Icons.event_note_outlined,
                         size: 21,
-                        color: Color(0xFF6C5CFF),
+                        color: purple,
                       ),
                     ),
-
                     const SizedBox(width: 14),
-
                     Expanded(
                       child: Text(
                         rekomendasi,
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF202044),
+                          color: darkPurple,
                         ),
                       ),
                     ),
@@ -242,15 +241,14 @@ class DetailBakatSiswaPage extends StatelessWidget {
         ),
       ),
 
-      // Navigasi bawah
+      // NAVIGASI BAWAH
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 2,
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: const Color(0xFF6C5CFF),
+        selectedItemColor: purple,
         unselectedItemColor: Colors.grey,
         selectedFontSize: 12,
         unselectedFontSize: 12,
-
         onTap: (index) {
           if (index == 0) {
             Navigator.pushReplacementNamed(
@@ -269,7 +267,6 @@ class DetailBakatSiswaPage extends StatelessWidget {
             );
           }
         },
-
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
@@ -293,61 +290,6 @@ class DetailBakatSiswaPage extends StatelessWidget {
           ),
         ],
       ),
-=======
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Color(0xFF1A1A2E)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Detail Bakat',
-            style: TextStyle(color: Color(0xFF1A1A2E), fontWeight: FontWeight.w600, fontSize: 18)),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6C63FF).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Icon(Icons.star_rounded, color: Color(0xFF6C63FF), size: 40),
-              ),
-              const SizedBox(height: 16),
-              Text(nama, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1A1A2E))),
-              const SizedBox(height: 8),
-              Text(kategori, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: approved
-                      ? const Color(0xFF4CAF50).withOpacity(0.1)
-                      : const Color(0xFFFF9800).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  status,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: approved ? const Color(0xFF4CAF50) : const Color(0xFFFF9800),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
->>>>>>> origin/main
     );
   }
 }

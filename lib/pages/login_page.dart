@@ -29,10 +29,7 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-<<<<<<< HEAD
   // LOGIN SUPABASE
-=======
->>>>>>> origin/main
   Future<void> _handleLogin() async {
     final email = _usernameController.text.trim();
     final password = _passwordController.text;
@@ -50,37 +47,26 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-<<<<<<< HEAD
-      // 1. Login melalui Supabase Authentication
+      // 1. Login menggunakan Supabase Authentication
       final authResponse = await supabase.auth.signInWithPassword(
-=======
-      final supabase = Supabase.instance.client;
-
-      // Login Supabase Authentication
-      final response = await supabase.auth.signInWithPassword(
->>>>>>> origin/main
         email: email,
         password: password,
       );
 
       final user = authResponse.user;
+
       if (user == null) {
         throw Exception('Akun tidak ditemukan.');
       }
 
       final userId = user.id;
 
-<<<<<<< HEAD
-      // 2. Cek user_id pada tabel siswa
-=======
-      // Debug UID akun
       debugPrint('UID LOGIN: $userId');
       debugPrint('EMAIL LOGIN: ${user.email}');
 
       String? dashboard;
 
-      // Cek role Siswa
->>>>>>> origin/main
+      // 2. Cek role Siswa
       final siswa = await supabase
           .from('siswa')
           .select()
@@ -90,19 +76,12 @@ class _LoginPageState extends State<LoginPage> {
       debugPrint('DATA SISWA: $siswa');
 
       if (siswa != null) {
-<<<<<<< HEAD
-        if (!mounted) return;
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/dashboard_siswa',
-          (route) => false,
-=======
         dashboard = '/dashboard_siswa';
       } else {
-        // Cek role Guru
+        // 3. Cek role Guru
         final guru = await supabase
             .from('guru')
-            .select('user_id')
+            .select()
             .eq('user_id', userId)
             .maybeSingle();
 
@@ -111,11 +90,11 @@ class _LoginPageState extends State<LoginPage> {
         if (guru != null) {
           dashboard = '/dashboard_guru';
         } else {
-          // Cek role Admin menggunakan id_admin
+          // 4. Cek role Admin
           final admin = await supabase
               .from('admin')
-              .select('id_admin')
-              .eq('id_admin', userId)
+              .select()
+              .eq('user_id', userId)
               .maybeSingle();
 
           debugPrint('DATA ADMIN: $admin');
@@ -126,72 +105,28 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
 
+      // 5. Jika role ditemukan, masuk ke dashboard
       if (!mounted) return;
 
       if (dashboard != null) {
         debugPrint('DASHBOARD: $dashboard');
 
-        Navigator.pushReplacementNamed(
+        Navigator.pushNamedAndRemoveUntil(
           context,
           dashboard,
+          (route) => false,
         );
       } else {
+        // Jika akun tidak terdaftar di tabel role
         await supabase.auth.signOut();
 
         if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Akun belum terdaftar sebagai Siswa, Guru, atau Admin!',
-            ),
-            backgroundColor: Colors.red,
-          ),
->>>>>>> origin/main
+        _showMessage(
+          'Akun belum terdaftar sebagai Siswa, Guru, atau Admin!',
+          Colors.red,
         );
-        return;
       }
-
-      // 3. Cek user_id pada tabel guru
-      final guru = await supabase
-          .from('guru')
-          .select()
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      if (guru != null) {
-        if (!mounted) return;
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/dashboard_guru',
-          (route) => false,
-        );
-        return;
-      }
-
-      // 4. Cek user_id pada tabel admin
-      final admin = await supabase
-          .from('admin')
-          .select()
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      if (admin != null) {
-        if (!mounted) return;
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/dashboard_admin',
-          (route) => false,
-        );
-        return;
-      }
-
-      // 5. Jika user_id tidak ada di ketiga tabel role
-      await supabase.auth.signOut();
-      throw Exception(
-        'Akun terdaftar di Auth, tetapi data profil role tidak ditemukan di database.',
-      );
-
     } on AuthException catch (e) {
       _showMessage(
         'Login gagal: ${e.message}',
@@ -203,21 +138,11 @@ class _LoginPageState extends State<LoginPage> {
         Colors.red,
       );
     } catch (e) {
-<<<<<<< HEAD
+      debugPrint('ERROR LOGIN: $e');
+
       _showMessage(
         e.toString().replaceFirst('Exception: ', ''),
         Colors.red,
-=======
-      debugPrint('ERROR LOGIN: $e');
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Terjadi kesalahan: $e'),
-          backgroundColor: Colors.red,
-        ),
->>>>>>> origin/main
       );
     } finally {
       if (mounted) {
@@ -303,7 +228,6 @@ class _LoginPageState extends State<LoginPage> {
 
                                   // EMAIL
                                   TextField(
-<<<<<<< HEAD
                                     controller: _usernameController,
                                     keyboardType:
                                         TextInputType.emailAddress,
@@ -312,11 +236,6 @@ class _LoginPageState extends State<LoginPage> {
                                     autofillHints: const [
                                       AutofillHints.email,
                                     ],
-=======
-                                    controller: _emailController,
-                                    keyboardType:
-                                        TextInputType.emailAddress,
->>>>>>> origin/main
                                     decoration: InputDecoration(
                                       hintText: 'Email',
                                       hintStyle: const TextStyle(

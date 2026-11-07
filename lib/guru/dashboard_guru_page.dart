@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,15 +10,11 @@ class DashboardGuruPage extends StatefulWidget {
 }
 
 class _DashboardGuruPageState extends State<DashboardGuruPage> {
-<<<<<<< HEAD
-  static const Color purple = Color(0xFF6C5CFF);
-  static const Color yellow = Color(0xFFFFC857);
-  static const Color darkPurple = Color(0xFF29264F);
-=======
   int _currentIndex = 0;
->>>>>>> origin/main
-
   bool _isLoggingOut = false;
+
+  static const Color purple = Color(0xFF6C63FF);
+  static const Color darkPurple = Color(0xFF29264F);
 
   Future<void> _logout() async {
     final konfirmasi = await showDialog<bool>(
@@ -75,196 +72,6 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
       body: SafeArea(
-<<<<<<< HEAD
-        child: Center(
-          child: Container(
-            width: 320,
-            height: 680,
-            margin: const EdgeInsets.all(16),
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: Stack(
-              children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 24,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 20),
-
-                      // Judul dan tombol Logout
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Dashboard Guru',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: darkPurple,
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: _isLoggingOut ? null : _logout,
-                            icon: const Icon(
-                              Icons.logout_rounded,
-                              color: Colors.red,
-                              size: 22,
-                            ),
-                            tooltip: 'Logout',
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      const Text(
-                        'Selamat Datang,\nPak Aris!',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: darkPurple,
-                          height: 1.3,
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Statistik Cards
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildStatCard(
-                            '120',
-                            'Total Siswa',
-                            purple,
-                            Colors.white,
-                          ),
-                          _buildStatCard(
-                            '32',
-                            'Status Aktif',
-                            yellow,
-                            darkPurple,
-                          ),
-                          _buildStatCard(
-                            '11',
-                            'Kegiatan',
-                            purple,
-                            Colors.white,
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      const Text(
-                        'Potensi Terbaru',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: darkPurple,
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Item Potensi 1 (Bisa diklik untuk buka Detail Bakat)
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushNamed(context, '/detail_bakat');
-                        },
-                        child: _buildPotensiItem(
-                          'Noufal Zaidan',
-                          'Bakat Seni (Desain)',
-                          'Berkembang',
-                          yellow,
-                          darkPurple,
-                        ),
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      _buildPotensiItem(
-                        'Alya Nasmi',
-                        'Bakat Public Speaking',
-                        'Berkembang',
-                        yellow,
-                        darkPurple,
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      _buildPotensiItem(
-                        'Siska Anjelin',
-                        'Bakat Fotografi',
-                        'Mulai Berkembang',
-                        yellow,
-                        darkPurple,
-                      ),
-
-                      const SizedBox(height: 70),
-                    ],
-                  ),
-                ),
-
-                // Bottom Navigation Bar
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, -5),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildNavItem(
-                          Icons.home,
-                          'Beranda',
-                          purple,
-                          true,
-                          () {},
-                        ),
-                        _buildNavItem(
-                          Icons.group,
-                          'Daftar Siswa',
-                          Colors.grey,
-                          false,
-                          () {
-                            Navigator.pushNamed(context, '/data_siswa');
-                          },
-                        ),
-                        _buildNavItem(
-                          Icons.history,
-                          'Riwayat',
-                          Colors.grey,
-                          false,
-                          () {},
-                        ),
-                        _buildNavItem(
-                          Icons.person,
-                          'Profil',
-                          Colors.grey,
-                          false,
-                          () {},
-                        ),
-                      ],
-=======
         child: Column(
           children: [
             // Header
@@ -272,7 +79,7 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
               decoration: const BoxDecoration(
-                color: Color(0xFF6C63FF),
+                color: purple,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(28),
                   bottomRight: Radius.circular(28),
@@ -288,7 +95,7 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Selamat Datang,",
+                            'Selamat Datang,',
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 14,
@@ -296,7 +103,7 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
                           ),
                           SizedBox(height: 4),
                           Text(
-                            "Pak Arif",
+                            'Pak Aris',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 22,
@@ -305,21 +112,24 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
                           ),
                         ],
                       ),
-                      CircleAvatar(
-                        radius: 24,
-                        backgroundColor: Colors.white.withOpacity(0.2),
-                        child: const Icon(Icons.person, color: Colors.white, size: 28),
+                      IconButton(
+                        onPressed: _isLoggingOut ? null : _logout,
+                        icon: const Icon(
+                          Icons.logout_rounded,
+                          color: Colors.white,
+                        ),
+                        tooltip: 'Logout',
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    "Pantau kegiatan siswa dalam bakat\nyang mereka minati",
+                    'Pantau kegiatan siswa dalam bakat\n'
+                    'yang mereka minati',
                     style: TextStyle(
                       color: Colors.white70,
                       fontSize: 13,
                       height: 1.4,
->>>>>>> origin/main
                     ),
                   ),
                 ],
@@ -335,25 +145,34 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
                 children: [
                   _buildQuickMenu(
                     icon: Icons.people_alt_outlined,
-                    label: "Data Siswa",
-                    color: const Color(0xFF6C63FF),
+                    label: 'Data Siswa',
+                    color: purple,
                     onTap: () {
-                      // Navigasi ke Data Siswa
+                      Navigator.pushNamed(context, '/data_siswa');
                     },
                   ),
                   const SizedBox(width: 12),
                   _buildQuickMenu(
                     icon: Icons.assignment_outlined,
-                    label: "Penilaian",
-                    color: const Color(0xFF4CAF50),
-                    onTap: () {},
+                    label: 'Penilaian',
+                    color: Colors.green,
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/penilaian_bakat',
+                      );
+                    },
                   ),
                   const SizedBox(width: 12),
                   _buildQuickMenu(
                     icon: Icons.history,
-                    label: "Riwayat",
-                    color: const Color(0xFFFF9800),
-                    onTap: () {},
+                    label: 'Riwayat',
+                    color: Colors.orange,
+                    onTap: () {
+                      setState(() {
+                        _currentIndex = 2;
+                      });
+                    },
                   ),
                 ],
               ),
@@ -361,17 +180,17 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
 
             const SizedBox(height: 28),
 
-            // Section Title
+            // Judul Siswa Terbaru
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "Siswa Terbaru",
+                  'Siswa Terbaru',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1A1A2E),
+                    color: darkPurple,
                   ),
                 ),
               ),
@@ -385,28 +204,24 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
                   _buildStudentCard(
-                    name: "Naufal Zaidan",
-                    className: "XI RPL 1",
-                    talent: "Menyanyi",
-                    imageUrl: null,
+                    name: 'Noufal Zaidan',
+                    className: 'XI RPL 1',
+                    talent: 'Desain',
                   ),
                   _buildStudentCard(
-                    name: "Alya Nayumi",
-                    className: "XI RPL 2",
-                    talent: "Menari",
-                    imageUrl: null,
+                    name: 'Alya Nasmi',
+                    className: 'XI RPL 2',
+                    talent: 'Public Speaking',
                   ),
                   _buildStudentCard(
-                    name: "Rizky Maulana",
-                    className: "X RPL 1",
-                    talent: "Coding",
-                    imageUrl: null,
+                    name: 'Siska Anjelin',
+                    className: 'XII RPL B',
+                    talent: 'Fotografi',
                   ),
                   _buildStudentCard(
-                    name: "Sinta Angelia",
-                    className: "XI TKJ 1",
-                    talent: "Menggambar",
-                    imageUrl: null,
+                    name: 'Rizky Maulana',
+                    className: 'X RPL 1',
+                    talent: 'Coding',
                   ),
                 ],
               ),
@@ -418,6 +233,7 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
     );
   }
 
+  // Menu Cepat
   Widget _buildQuickMenu({
     required IconData icon,
     required String label,
@@ -466,21 +282,12 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
     );
   }
 
-<<<<<<< HEAD
-  Widget _buildStatCard(
-    String number,
-    String label,
-    Color bgColor,
-    Color textColor,
-  ) {
-=======
+  // Card Siswa
   Widget _buildStudentCard({
     required String name,
     required String className,
     required String talent,
-    String? imageUrl,
   }) {
->>>>>>> origin/main
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -495,37 +302,6 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
           ),
         ],
       ),
-<<<<<<< HEAD
-    );
-  }
-
-  Widget _buildPotensiItem(
-    String name,
-    String bakat,
-    String status,
-    Color badgeColor,
-    Color textColor,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9F9F9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.grey.shade200,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          const CircleAvatar(
-            radius: 20,
-            backgroundColor: Colors.grey,
-            child: Icon(
-              Icons.person,
-              color: Colors.white,
-              size: 24,
-=======
       child: Row(
         children: [
           CircleAvatar(
@@ -534,11 +310,10 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
             child: Text(
               name[0],
               style: const TextStyle(
-                color: Color(0xFF6C63FF),
+                color: purple,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
->>>>>>> origin/main
             ),
           ),
           const SizedBox(width: 14),
@@ -551,7 +326,7 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
-                    color: Color(0xFF1A1A2E),
+                    color: darkPurple,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -566,16 +341,12 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
             ),
           ),
           Container(
-<<<<<<< HEAD
             padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 4,
+              horizontal: 10,
+              vertical: 5,
             ),
-=======
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
->>>>>>> origin/main
             decoration: BoxDecoration(
-              color: const Color(0xFF6C63FF).withOpacity(0.1),
+              color: purple.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -583,7 +354,7 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF6C63FF),
+                color: purple,
               ),
             ),
           ),
@@ -592,29 +363,7 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
     );
   }
 
-<<<<<<< HEAD
-  Widget _buildNavItem(
-    IconData icon,
-    String label,
-    Color color,
-    bool isSelected,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 20, color: color),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 8,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: color,
-            ),
-=======
+  // Bottom Navigation
   Widget _buildBottomNav() {
     return Container(
       decoration: BoxDecoration(
@@ -630,31 +379,38 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
       child: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() => _currentIndex = index);
+          setState(() {
+            _currentIndex = index;
+          });
+
+          if (index == 1) {
+            Navigator.pushNamed(context, '/data_siswa');
+          } else if (index == 2) {
+            Navigator.pushNamed(context, '/penilaian_bakat');
+          }
         },
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF6C63FF),
+        selectedItemColor: purple,
         unselectedItemColor: Colors.grey[400],
         selectedFontSize: 11,
         unselectedFontSize: 11,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_rounded),
-            label: "Beranda",
+            label: 'Beranda',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.people_alt_outlined),
-            label: "Siswa",
+            label: 'Siswa',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.assignment_outlined),
-            label: "Penilaian",
+            label: 'Penilaian',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
-            label: "Profil",
->>>>>>> origin/main
+            label: 'Profil',
           ),
         ],
       ),

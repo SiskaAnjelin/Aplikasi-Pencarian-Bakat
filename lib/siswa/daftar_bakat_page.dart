@@ -1,5 +1,6 @@
+
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
+import 'tambah_bakat_page.dart';
 
 class DaftarBakatPage extends StatefulWidget {
   const DaftarBakatPage({super.key});
@@ -98,7 +99,7 @@ class _DaftarBakatPageState extends State<DaftarBakatPage> {
       return talents;
     }
 
-    String selectedCategory = categories[_selectedCategoryIndex];
+    final selectedCategory = categories[_selectedCategoryIndex];
 
     return talents
         .where((talent) => talent.category == selectedCategory)
@@ -107,56 +108,55 @@ class _DaftarBakatPageState extends State<DaftarBakatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-
-=======
-import 'tambah_bakat_page.dart';
-
-class DaftarBakatPage extends StatelessWidget {
-  const DaftarBakatPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final items = [
-      {'nama': 'Menggambar', 'icon': Icons.brush_outlined, 'color': const Color(0xFF6C63FF)},
-      {'nama': 'Matematika', 'icon': Icons.calculate_outlined, 'color': const Color(0xFF4CAF50)},
-      {'nama': 'Menyanyi', 'icon': Icons.music_note_outlined, 'color': const Color(0xFFFF9800)},
-      {'nama': 'Coding', 'icon': Icons.code, 'color': const Color(0xFF2196F3)},
-      {'nama': 'Menari', 'icon': Icons.nightlife, 'color': const Color(0xFFE91E63)},
-      {'nama': 'Olahraga', 'icon': Icons.sports_soccer, 'color': const Color(0xFF009688)},
-    ];
+    final displayedTalents = filteredTalents;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FC),
->>>>>>> origin/main
+
+      // APP BAR
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-<<<<<<< HEAD
           icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.black87,
+            Icons.arrow_back_ios_new,
+            size: 20,
+            color: Color(0xFF1A1A2E),
           ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'Bakat Saya',
+          'Daftar Bakat',
           style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
+            color: Color(0xFF1A1A2E),
+            fontWeight: FontWeight.w600,
             fontSize: 18,
           ),
         ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(
+              Icons.add_circle_outline,
+              color: Color(0xFF6C63FF),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const TambahBakatPage(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
 
+      // BODY
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Filter kategori
+          // FILTER KATEGORI
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -168,8 +168,7 @@ class DaftarBakatPage extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 itemCount: categories.length,
                 itemBuilder: (context, index) {
-                  final isSelected =
-                      _selectedCategoryIndex == index;
+                  final isSelected = _selectedCategoryIndex == index;
 
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
@@ -200,7 +199,7 @@ class DaftarBakatPage extends StatelessWidget {
             ),
           ),
 
-          // Judul daftar
+          // JUDUL DAFTAR
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Text(
@@ -215,24 +214,27 @@ class DaftarBakatPage extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Daftar bakat
+          // GRID DAFTAR BAKAT
           Expanded(
-            child: filteredTalents.isEmpty
+            child: displayedTalents.isEmpty
                 ? const Center(
                     child: Text('Belum ada data bakat'),
                   )
-                : ListView.separated(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
+                : GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: displayedTalents.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 14,
+                      mainAxisSpacing: 14,
+                      childAspectRatio: 0.95,
                     ),
-                    itemCount: filteredTalents.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 10),
                     itemBuilder: (context, index) {
-                      final talent = filteredTalents[index];
+                      final talent = displayedTalents[index];
 
                       return InkWell(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(18),
                         onTap: () {
                           Navigator.pushNamed(
                             context,
@@ -240,85 +242,79 @@ class DaftarBakatPage extends StatelessWidget {
                           );
                         },
                         child: Container(
-                          padding: const EdgeInsets.all(14),
+                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.grey.shade200,
-                            ),
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          child: Row(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Ikon bakat
+                              // IKON BAKAT
                               Container(
-                                width: 52,
-                                height: 52,
+                                padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFEFEFF9),
-                                  borderRadius:
-                                      BorderRadius.circular(13),
+                                  color: talent.statusColor.withOpacity(0.12),
+                                  shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   talent.icon,
-                                  color: const Color(0xFF6C63FF),
-                                  size: 27,
+                                  color: talent.statusColor,
+                                  size: 28,
                                 ),
                               ),
 
-                              const SizedBox(width: 14),
+                              const SizedBox(height: 12),
 
-                              // Nama dan kategori
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      talent.title,
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 5),
-                                    Text(
-                                      talent.category,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 7),
-                                    Container(
-                                      padding:
-                                          const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: talent.statusColor
-                                            .withOpacity(0.1),
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        talent.status,
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: talent.statusColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                              // NAMA BAKAT
+                              Text(
+                                talent.title,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                  color: Color(0xFF1A1A2E),
                                 ),
                               ),
 
-                              const Icon(
-                                Icons.chevron_right,
-                                color: Colors.black45,
+                              const SizedBox(height: 5),
+
+                              // KATEGORI
+                              Text(
+                                talent.category,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+
+                              const SizedBox(height: 8),
+
+                              // STATUS
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: talent.statusColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  talent.status,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: talent.statusColor,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -330,7 +326,7 @@ class DaftarBakatPage extends StatelessWidget {
         ],
       ),
 
-      // Navigasi bawah
+      // NAVIGASI BAWAH
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 1,
         type: BottomNavigationBarType.fixed,
@@ -338,7 +334,6 @@ class DaftarBakatPage extends StatelessWidget {
         unselectedItemColor: Colors.grey,
         selectedFontSize: 12,
         unselectedFontSize: 12,
-
         onTap: (index) {
           if (index == 0) {
             Navigator.pushReplacementNamed(
@@ -357,7 +352,6 @@ class DaftarBakatPage extends StatelessWidget {
             );
           }
         },
-
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_outlined),
@@ -380,54 +374,6 @@ class DaftarBakatPage extends StatelessWidget {
             label: 'Profil',
           ),
         ],
-=======
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Color(0xFF1A1A2E)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Daftar Bakat',
-            style: TextStyle(color: Color(0xFF1A1A2E), fontWeight: FontWeight.w600, fontSize: 18)),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline, color: Color(0xFF6C63FF)),
-            onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const TambahBakatPage()));
-            },
-          ),
-        ],
-      ),
-      body: GridView.count(
-        padding: const EdgeInsets.all(20),
-        crossAxisCount: 2,
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
-        childAspectRatio: 1.1,
-        children: items.map((item) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: (item['color'] as Color).withOpacity(0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(item['icon'] as IconData, color: item['color'] as Color, size: 28),
-                ),
-                const SizedBox(height: 12),
-                Text(item['nama'] as String,
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF1A1A2E))),
-              ],
-            ),
-          );
-        }).toList(),
->>>>>>> origin/main
       ),
     );
   }
