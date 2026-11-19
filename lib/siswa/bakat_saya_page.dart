@@ -41,78 +41,119 @@ class _BakatSayaPageState extends State<BakatSayaPage> {
     },
   ];
 
+  // FILTER BAKAT BERDASARKAN KATEGORI
+  List<Map<String, dynamic>> get _filteredBakat {
+    if (_selectedTab == 0) {
+      return _bakatList;
+    }
+
+    final kategori = _selectedTab == 1 ? "Seni" : "Akademik";
+
+    return _bakatList
+        .where((bakat) => bakat["kategori"] == kategori)
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20, color: Color(0xFF1A1A2E)),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          "Bakat Saya",
-          style: TextStyle(
-            color: Color(0xFF1A1A2E),
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline, color: Color(0xFF6C63FF)),
-            onPressed: () {
-              // Navigasi ke Tambah Bakat
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Tab Filter
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-            child: Row(
+    final displayedBakat = _filteredBakat;
+
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: const Color(0xFFF8F9FC),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 430),
+          child: Scaffold(
+            backgroundColor: const Color(0xFFF8F9FC),
+            appBar: AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new,
+                  size: 20,
+                  color: Color(0xFF1A1A2E),
+                ),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: const Text(
+                "Bakat Saya",
+                style: TextStyle(
+                  color: Color(0xFF1A1A2E),
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                ),
+              ),
+              centerTitle: true,
+              actions: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.add_circle_outline,
+                    color: Color(0xFF6C63FF),
+                  ),
+                  onPressed: () {
+                    // Navigasi ke Tambah Bakat
+                  },
+                ),
+              ],
+            ),
+            body: Column(
               children: [
-                _buildTab("Semua", 0),
-                const SizedBox(width: 10),
-                _buildTab("Seni", 1),
-                const SizedBox(width: 10),
-                _buildTab("Akademik", 2),
+                // TAB FILTER
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+                  child: Row(
+                    children: [
+                      _buildTab("Semua", 0),
+                      const SizedBox(width: 10),
+                      _buildTab("Seni", 1),
+                      const SizedBox(width: 10),
+                      _buildTab("Akademik", 2),
+                    ],
+                  ),
+                ),
+
+                // LIST BAKAT
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: displayedBakat.length,
+                    itemBuilder: (context, index) {
+                      final bakat = displayedBakat[index];
+                      return _buildBakatItem(bakat);
+                    },
+                  ),
+                ),
               ],
             ),
           ),
-
-          // List Bakat
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: _bakatList.length,
-              itemBuilder: (context, index) {
-                final bakat = _bakatList[index];
-                return _buildBakatItem(bakat);
-              },
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
+  // TAB FILTER
   Widget _buildTab(String label, int index) {
     final isSelected = _selectedTab == index;
+
     return GestureDetector(
       onTap: () => setState(() => _selectedTab = index),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 8,
+        ),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF6C63FF) : Colors.white,
+          color: isSelected
+              ? const Color(0xFF6C63FF)
+              : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF6C63FF) : Colors.grey.shade300,
+            color: isSelected
+                ? const Color(0xFF6C63FF)
+                : Colors.grey.shade300,
           ),
         ),
         child: Text(
@@ -120,13 +161,16 @@ class _BakatSayaPageState extends State<BakatSayaPage> {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
-            color: isSelected ? Colors.white : Colors.grey[600],
+            color: isSelected
+                ? Colors.white
+                : Colors.grey[600],
           ),
         ),
       ),
     );
   }
 
+  // ITEM BAKAT
   Widget _buildBakatItem(Map<String, dynamic> bakat) {
     final isApproved = bakat["status"] == "Disetujui";
 
@@ -183,7 +227,10 @@ class _BakatSayaPageState extends State<BakatSayaPage> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 5,
+            ),
             decoration: BoxDecoration(
               color: isApproved
                   ? const Color(0xFF4CAF50).withOpacity(0.1)
@@ -195,7 +242,9 @@ class _BakatSayaPageState extends State<BakatSayaPage> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
-                color: isApproved ? const Color(0xFF4CAF50) : const Color(0xFFFF9800),
+                color: isApproved
+                    ? const Color(0xFF4CAF50)
+                    : const Color(0xFFFF9800),
               ),
             ),
           ),

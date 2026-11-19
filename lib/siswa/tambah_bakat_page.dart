@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -138,163 +139,185 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Colors.black87,
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: const Color(0xFFF8F9FA),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: 430,
           ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text(
-          'Tambah Bakat',
-          style: TextStyle(
-            color: Color(0xFF202044),
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
+          child: Scaffold(
+            backgroundColor: const Color(0xFFF8F9FA),
+
+            appBar: AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.black87,
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+              title: const Text(
+                'Tambah Bakat',
+                style: TextStyle(
+                  color: Color(0xFF202044),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+
+            body: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      color: Color(0xFF6C5CFF),
+                    ),
+                  )
+                : SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Pilih Bakat',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        DropdownButtonFormField<String>(
+                          value: _selectedBakatId,
+                          isExpanded: true,
+                          decoration: InputDecoration(
+                            hintText: 'Pilih bakat yang kamu minati',
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding:
+                                const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE0E0E0),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF6C5CFF),
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                          items: _daftarBakat.map((bakat) {
+                            return DropdownMenuItem<String>(
+                              value: bakat['id_bakat'].toString(),
+                              child: Text(
+                                bakat['nama_bakat'].toString(),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedBakatId = value;
+                            });
+                          },
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        const Text(
+                          'Deskripsi',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: const Color(0xFFE0E0E0),
+                            ),
+                          ),
+                          child: Text(
+                            _selectedBakatId == null
+                                ? 'Deskripsi bakat akan muncul di sini.'
+                                : _deskripsiBakat,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: _selectedBakatId == null
+                                  ? Colors.grey
+                                  : Colors.black87,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 35),
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color(0xFF6C5CFF),
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(16),
+                              ),
+                              elevation: 0,
+                            ),
+                            onPressed:
+                                _isSaving || _daftarBakat.isEmpty
+                                    ? null
+                                    : _simpanBakat,
+                            child: _isSaving
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child:
+                                        CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Simpan',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
           ),
         ),
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFF6C5CFF),
-              ),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Pilih Bakat',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  DropdownButtonFormField<String>(
-                    value: _selectedBakatId,
-                    isExpanded: true,
-                    decoration: InputDecoration(
-                      hintText: 'Pilih bakat yang kamu minati',
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: Color(0xFFE0E0E0),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
-                          color: Color(0xFF6C5CFF),
-                          width: 1.5,
-                        ),
-                      ),
-                    ),
-                    items: _daftarBakat.map((bakat) {
-                      return DropdownMenuItem<String>(
-                        value: bakat['id_bakat'].toString(),
-                        child: Text(
-                          bakat['nama_bakat'].toString(),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedBakatId = value;
-                      });
-                    },
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  const Text(
-                    'Deskripsi',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFFE0E0E0),
-                      ),
-                    ),
-                    child: Text(
-                      _selectedBakatId == null
-                          ? 'Deskripsi bakat akan muncul di sini.'
-                          : _deskripsiBakat,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: _selectedBakatId == null
-                            ? Colors.grey
-                            : Colors.black87,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 35),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6C5CFF),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      onPressed: _isSaving || _daftarBakat.isEmpty
-                          ? null
-                          : _simpanBakat,
-                      child: _isSaving
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Text(
-                              'Simpan',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
     );
   }
 }

@@ -127,209 +127,234 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FC),
+      backgroundColor: Colors.black,
       body: SafeArea(
-        child: Column(
-          children: [
-            // HEADER
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              decoration: const BoxDecoration(
-                color: purple,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(28),
-                  bottomRight: Radius.circular(28),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // SAPAAN DAN LOGOUT
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Column(
+        child: Center(
+          child: Container(
+            width: 320,
+            height: 680,
+            margin: const EdgeInsets.all(16),
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FC),
+              borderRadius: BorderRadius.circular(40),
+            ),
+            child: Scaffold(
+              backgroundColor: const Color(0xFFF8F9FC),
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    // HEADER
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                      decoration: const BoxDecoration(
+                        color: purple,
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(28),
+                          bottomRight: Radius.circular(28),
+                        ),
+                      ),
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Halo, Alya!',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Selamat datang kembali',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const CircleAvatar(
-                            radius: 24,
-                            backgroundColor: Color(0x336FFFFFF),
-                            child: Icon(
-                              Icons.person,
-                              color: Colors.white,
-                              size: 28,
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: _isLoggingOut ? null : _logout,
-                            tooltip: 'Logout',
-                            icon: const Icon(
-                              Icons.logout_rounded,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  // CARD BAKAT SAYA
-                  InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/daftar_bakat',
-                      );
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.star_rounded,
-                              color: Colors.white,
-                              size: 26,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Bakat Saya',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15,
-                                  ),
+                          // SAPAAN DAN LOGOUT
+                          Row(
+                            mainAxisAlignment:
+                                MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Halo, Alya!',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'Selamat datang kembali',
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                SizedBox(height: 2),
-                                Text(
-                                  '3 bakat terdaftar',
-                                  style: TextStyle(
+                              ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const CircleAvatar(
+                                    radius: 24,
+                                    backgroundColor: Color(0x336FFFFFF),
+                                    child: Icon(
+                                      Icons.person,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed:
+                                        _isLoggingOut ? null : _logout,
+                                    tooltip: 'Logout',
+                                    icon: const Icon(
+                                      Icons.logout_rounded,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 18),
+
+                          // CARD BAKAT SAYA
+                          InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/daftar_bakat',
+                              );
+                            },
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.2),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.star_rounded,
+                                      color: Colors.white,
+                                      size: 26,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  const Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Bakat Saya',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        SizedBox(height: 2),
+                                        Text(
+                                          '3 bakat terdaftar',
+                                          style: TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.arrow_forward_ios,
                                     color: Colors.white70,
-                                    fontSize: 12,
+                                    size: 16,
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          const Icon(
-                            Icons.arrow_forward_ios,
-                            color: Colors.white70,
-                            size: 16,
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
 
-            const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-            // JUDUL SECTION
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Bakat Populer',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1A1A2E),
-                  ),
+                    // JUDUL SECTION
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Bakat Populer',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1A1A2E),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // GRID BAKAT
+                    Expanded(
+                      child: GridView.count(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 14,
+                        mainAxisSpacing: 14,
+                        childAspectRatio: 1.1,
+                        children: [
+                          _buildBakatCard(
+                            'Menggambar',
+                            Icons.brush_outlined,
+                            purple,
+                          ),
+                          _buildBakatCard(
+                            'Matematika',
+                            Icons.calculate_outlined,
+                            const Color(0xFF4CAF50),
+                          ),
+                          _buildBakatCard(
+                            'Menyanyi',
+                            Icons.music_note_outlined,
+                            yellow,
+                          ),
+                          _buildBakatCard(
+                            'Coding',
+                            Icons.code,
+                            const Color(0xFF2196F3),
+                          ),
+                          _buildBakatCard(
+                            'Menari',
+                            Icons.nightlife,
+                            const Color(0xFFE91E63),
+                          ),
+                          _buildBakatCard(
+                            'Olahraga',
+                            Icons.sports_soccer,
+                            const Color(0xFF009688),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
 
-            const SizedBox(height: 14),
-
-            // GRID BAKAT
-            Expanded(
-              child: GridView.count(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                crossAxisCount: 2,
-                crossAxisSpacing: 14,
-                mainAxisSpacing: 14,
-                childAspectRatio: 1.1,
-                children: [
-                  _buildBakatCard(
-                    'Menggambar',
-                    Icons.brush_outlined,
-                    purple,
-                  ),
-                  _buildBakatCard(
-                    'Matematika',
-                    Icons.calculate_outlined,
-                    const Color(0xFF4CAF50),
-                  ),
-                  _buildBakatCard(
-                    'Menyanyi',
-                    Icons.music_note_outlined,
-                    const Color(0xFFFF9800),
-                  ),
-                  _buildBakatCard(
-                    'Coding',
-                    Icons.code,
-                    const Color(0xFF2196F3),
-                  ),
-                  _buildBakatCard(
-                    'Menari',
-                    Icons.nightlife,
-                    const Color(0xFFE91E63),
-                  ),
-                  _buildBakatCard(
-                    'Olahraga',
-                    Icons.sports_soccer,
-                    const Color(0xFF009688),
-                  ),
-                ],
-              ),
+              // BOTTOM NAVIGATION
+              bottomNavigationBar: _buildBottomNav(),
             ),
-          ],
+          ),
         ),
       ),
-
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 class PenilaianBakatPage extends StatefulWidget {
@@ -33,13 +34,13 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
       'nama': 'Naufal Zaidan',
       'bakat': 'Menyanyi',
       'kelas': 'XI RPL 1',
-      'status': 'Pending',
+      'status': 'Dalam Proses',
     },
     {
       'nama': 'Alya Nayumi',
       'bakat': 'Menari',
       'kelas': 'XI RPL 2',
-      'status': 'Pending',
+      'status': 'Dalam Proses',
     },
     {
       'nama': 'Rizky Maulana',
@@ -63,12 +64,10 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Jika nama siswa tersedia, tampilkan form penilaian.
     if (widget.siswaName != null) {
       return _buildForm();
     }
 
-    // Jika tidak, tampilkan daftar penilaian siswa.
     return _buildList();
   }
 
@@ -79,10 +78,12 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
         ? _listSiswa
         : _selectedTab == 1
             ? _listSiswa
-                .where((item) => item['status'] == 'Pending')
+                .where((item) =>
+                    item['status'] == 'Dalam Proses')
                 .toList()
             : _listSiswa
-                .where((item) => item['status'] == 'Disetujui')
+                .where((item) =>
+                    item['status'] == 'Disetujui')
                 .toList();
 
     return Scaffold(
@@ -90,10 +91,11 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        toolbarHeight: 56,
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new,
-            size: 20,
+            size: 18,
             color: darkPurple,
           ),
           onPressed: () => Navigator.pop(context),
@@ -103,7 +105,7 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
           style: TextStyle(
             color: darkPurple,
             fontWeight: FontWeight.w600,
-            fontSize: 18,
+            fontSize: 17,
           ),
         ),
         centerTitle: true,
@@ -111,117 +113,139 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            padding: const EdgeInsets.fromLTRB(14, 16, 14, 8),
             child: Row(
               children: [
                 _buildTab('Semua', 0),
-                const SizedBox(width: 8),
-                _buildTab('Pending', 1),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
+                _buildTab('Dalam Proses', 1),
+                const SizedBox(width: 6),
                 _buildTab('Disetujui', 2),
               ],
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 8,
-              ),
-              itemCount: filteredList.length,
-              itemBuilder: (context, index) {
-                final item = filteredList[index];
-                final pending = item['status'] == 'Pending';
-
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PenilaianBakatPage(
-                          siswaName: item['nama'],
-                          bakatName: item['bakat'],
-                        ),
+            child: filteredList.isEmpty
+                ? const Center(
+                    child: Text(
+                      'Belum ada data penilaian',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 13,
                       ),
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
                     ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 24,
-                          backgroundColor: const Color(0xFFE8E7FF),
-                          child: Text(
-                            item['nama']![0],
-                            style: const TextStyle(
-                              color: purple,
-                              fontWeight: FontWeight.bold,
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    itemCount: filteredList.length,
+                    itemBuilder: (context, index) {
+                      final item = filteredList[index];
+                      final dalamProses =
+                          item['status'] == 'Dalam Proses';
+
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PenilaianBakatPage(
+                                siswaName: item['nama'],
+                                bakatName: item['bakat'],
+                              ),
                             ),
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
                             children: [
-                              Text(
-                                item['nama']!,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
-                                  color: darkPurple,
+                              CircleAvatar(
+                                radius: 22,
+                                backgroundColor:
+                                    const Color(0xFFE8E7FF),
+                                child: Text(
+                                  item['nama']![0],
+                                  style: const TextStyle(
+                                    color: purple,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 17,
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${item['bakat']} · ${item['kelas']}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item['nama']!,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                        color: darkPurple,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${item['bakat']} · ${item['kelas']}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: dalamProses
+                                      ? Colors.orange.withOpacity(0.1)
+                                      : Colors.green.withOpacity(0.1),
+                                  borderRadius:
+                                      BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  item['status']!,
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w600,
+                                    color: dalamProses
+                                        ? Colors.orange
+                                        : Colors.green,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: pending
-                                ? Colors.orange.withOpacity(0.1)
-                                : Colors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            item['status']!,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: pending ? Colors.orange : Colors.green,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ],
       ),
@@ -233,30 +257,35 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
   Widget _buildTab(String label, int index) {
     final selected = _selectedTab == index;
 
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedTab = index;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 9,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? purple : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? purple : Colors.grey.shade300,
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedTab = index;
+          });
+        },
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(
+            horizontal: 3,
+            vertical: 10,
           ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: selected ? Colors.white : Colors.grey[600],
+          decoration: BoxDecoration(
+            color: selected ? purple : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected ? purple : Colors.grey.shade300,
+            ),
+          ),
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: selected ? Colors.white : Colors.grey[600],
+            ),
           ),
         ),
       ),
@@ -274,10 +303,11 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        toolbarHeight: 56,
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new,
-            size: 20,
+            size: 18,
             color: darkPurple,
           ),
           onPressed: () => Navigator.pop(context),
@@ -287,15 +317,15 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
           style: TextStyle(
             color: darkPurple,
             fontWeight: FontWeight.w600,
-            fontSize: 18,
+            fontSize: 17,
           ),
         ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 16,
+          horizontal: 16,
+          vertical: 14,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,14 +333,14 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
             // Profil Siswa
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(13),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.04),
-                    blurRadius: 10,
+                    blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
                 ],
@@ -318,27 +348,29 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 30,
+                    radius: 25,
                     backgroundColor: const Color(0xFFE8E7FF),
                     child: Text(
                       nama.isNotEmpty ? nama[0] : '?',
                       style: const TextStyle(
                         color: purple,
-                        fontSize: 22,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           nama,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 17,
+                            fontSize: 15,
                             color: darkPurple,
                           ),
                         ),
@@ -346,7 +378,7 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
                         Text(
                           bakat,
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 12,
                             color: Colors.grey[600],
                           ),
                         ),
@@ -357,18 +389,18 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 22),
 
             const Text(
               'Aspek Penilaian',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: darkPurple,
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
             _buildSlider(
               title: 'Kreativitas',
@@ -380,7 +412,7 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
               },
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             _buildSlider(
               title: 'Teknik',
@@ -392,7 +424,7 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
               },
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             _buildSlider(
               title: 'Konsistensi',
@@ -404,12 +436,12 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
               },
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
             // Rata-rata Nilai
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: purple.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(12),
@@ -420,6 +452,7 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
                   const Text(
                     'Rata-rata Skor',
                     style: TextStyle(
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: darkPurple,
                     ),
@@ -431,7 +464,7 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
                             3)
                         .toStringAsFixed(0),
                     style: const TextStyle(
-                      fontSize: 22,
+                      fontSize: 21,
                       fontWeight: FontWeight.bold,
                       color: purple,
                     ),
@@ -440,27 +473,29 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // Catatan dan Rekomendasi Guru
             const Text(
               'Catatan dan Rekomendasi Guru',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: darkPurple,
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 9),
 
             TextField(
               controller: _rekomendasiController,
               maxLines: 4,
+              style: const TextStyle(fontSize: 13),
               decoration: InputDecoration(
                 hintText: 'Tuliskan catatan atau rekomendasi...',
+                hintStyle: const TextStyle(fontSize: 12),
                 filled: true,
                 fillColor: const Color(0xFFF8F9FC),
+                contentPadding: const EdgeInsets.all(12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -468,7 +503,7 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 22),
 
             // Tombol Tolak dan Setujui
             Row(
@@ -484,15 +519,18 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: purple,
                       side: const BorderSide(color: purple),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(11),
                       ),
                     ),
-                    child: const Text('Tolak'),
+                    child: const Text(
+                      'Tolak',
+                      style: TextStyle(fontSize: 13),
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
@@ -504,13 +542,16 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: purple,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(11),
                       ),
                     ),
-                    child: const Text('Setujui'),
+                    child: const Text(
+                      'Setujui',
+                      style: TextStyle(fontSize: 13),
+                    ),
                   ),
                 ),
               ],
@@ -539,7 +580,7 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
             Text(
               title,
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 13,
                 fontWeight: FontWeight.w500,
                 color: darkPurple,
               ),
@@ -547,26 +588,26 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
             Text(
               value.toInt().toString(),
               style: const TextStyle(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: purple,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         SliderTheme(
           data: SliderThemeData(
-            trackHeight: 6,
+            trackHeight: 5,
             activeTrackColor: purple,
             inactiveTrackColor: Colors.grey.shade300,
             thumbColor: purple,
             overlayColor: purple.withOpacity(0.12),
             thumbShape: const RoundSliderThumbShape(
-              enabledThumbRadius: 8,
+              enabledThumbRadius: 7,
             ),
             overlayShape: const RoundSliderOverlayShape(
-              overlayRadius: 16,
+              overlayRadius: 14,
             ),
           ),
           child: Slider(
@@ -609,10 +650,11 @@ class PenilaianBakatRiwayatPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        toolbarHeight: 56,
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back_ios_new,
-            size: 20,
+            size: 18,
             color: Color(0xFF29264F),
           ),
           onPressed: () => Navigator.pop(context),
@@ -622,20 +664,20 @@ class PenilaianBakatRiwayatPage extends StatelessWidget {
           style: TextStyle(
             color: Color(0xFF29264F),
             fontWeight: FontWeight.w600,
-            fontSize: 18,
+            fontSize: 17,
           ),
         ),
         centerTitle: true,
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(14),
         children: const [
           _RiwayatCard(
             title: 'Noufal Zaidan',
             subtitle: 'Lomba Komik FLS2N - Tingkat Provinsi',
             date: '20 Desember 2025',
           ),
-          SizedBox(height: 16),
+          SizedBox(height: 12),
           _RiwayatCard(
             title: 'Noufal Zaidan',
             subtitle: 'Kompetisi Desain Grafis dan Kampanye Visual',
@@ -662,10 +704,10 @@ class _RiwayatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: const Color(0xFF6C5CFF).withOpacity(0.5),
           width: 1.2,
@@ -674,7 +716,7 @@ class _RiwayatCard extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
             blurRadius: 8,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -682,15 +724,15 @@ class _RiwayatCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const CircleAvatar(
-            radius: 28,
+            radius: 24,
             backgroundColor: Color(0xFFD3E3FD),
             child: Icon(
               Icons.person,
-              size: 32,
+              size: 28,
               color: Colors.grey,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -698,7 +740,7 @@ class _RiwayatCard extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 17,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -706,7 +748,7 @@ class _RiwayatCard extends StatelessWidget {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     height: 1.3,
                     color: Colors.black87,
                   ),
@@ -715,16 +757,16 @@ class _RiwayatCard extends StatelessWidget {
                 Text(
                   date,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: Colors.grey,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 Align(
                   alignment: Alignment.centerRight,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
+                      horizontal: 16,
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
@@ -734,7 +776,7 @@ class _RiwayatCard extends StatelessWidget {
                     child: const Text(
                       'Selesai',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF2D6A4F),
                       ),

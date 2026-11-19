@@ -6,29 +6,36 @@ class DashboardGuruPage extends StatefulWidget {
   const DashboardGuruPage({super.key});
 
   @override
-  State<DashboardGuruPage> createState() => _DashboardGuruPageState();
+  State<DashboardGuruPage> createState() =>
+      _DashboardGuruPageState();
 }
 
 class _DashboardGuruPageState extends State<DashboardGuruPage> {
   int _currentIndex = 0;
   bool _isLoggingOut = false;
 
-  static const Color purple = Color(0xFF6C63FF);
+  static const Color purple = Color(0xFF6C5CFF);
   static const Color darkPurple = Color(0xFF29264F);
+  static const Color yellow = Color(0xFFFFC857);
 
+  // LOGOUT SUPABASE
   Future<void> _logout() async {
     final konfirmasi = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Konfirmasi Logout'),
-        content: const Text('Apakah kamu yakin ingin keluar dari akun?'),
+        content: const Text(
+          'Apakah kamu yakin ingin keluar dari akun?',
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () =>
+                Navigator.pop(context, false),
             child: const Text('Batal'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () =>
+                Navigator.pop(context, true),
             child: const Text(
               'Logout',
               style: TextStyle(color: Colors.red),
@@ -40,9 +47,7 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
 
     if (konfirmasi != true || !mounted) return;
 
-    setState(() {
-      _isLoggingOut = true;
-    });
+    setState(() => _isLoggingOut = true);
 
     try {
       await Supabase.instance.client.auth.signOut();
@@ -57,247 +62,300 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
     } catch (e) {
       if (!mounted) return;
 
-      setState(() {
-        _isLoggingOut = false;
-      });
+      setState(() => _isLoggingOut = false);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal logout: $e')),
+        SnackBar(
+          content: Text('Gagal logout: $e'),
+        ),
       );
+    }
+  }
+
+  // NAVIGASI BAWAH
+  void _onNavTap(int index) {
+    if (index == 0) {
+      setState(() {
+        _currentIndex = 0;
+      });
+      return;
+    }
+
+    String route = '';
+
+    switch (index) {
+      case 1:
+        route = '/data_siswa';
+        break;
+
+      case 2:
+        route = '/riwayat_kegiatan';
+        break;
+
+      case 3:
+        route = '/penilaian_bakat';
+        break;
+
+      case 4:
+        route = '/profil_guru';
+        break;
+    }
+
+    if (route.isNotEmpty) {
+      Navigator.pushNamed(context, route).then((_) {
+        if (mounted) {
+          setState(() {
+            _currentIndex = 0;
+          });
+        }
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FC),
+      backgroundColor: Colors.black,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              decoration: const BoxDecoration(
-                color: purple,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(28),
-                  bottomRight: Radius.circular(28),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Selamat Datang,',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 14,
+        child: Center(
+          child: Container(
+            width: 320,
+            height: 680,
+            margin: const EdgeInsets.all(16),
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(40),
+            ),
+            child: Column(
+              children: [
+                // KONTEN DASHBOARD
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(
+                      18,
+                      20,
+                      18,
+                      20,
+                    ),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                      children: [
+                        // JUDUL DASHBOARD
+                        Row(
+                          mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Dashboard Guru',
+                              style: TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.bold,
+                                color: darkPurple,
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Pak Aris',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
+                            IconButton(
+                              onPressed: _isLoggingOut
+                                  ? null
+                                  : _logout,
+                              icon: const Icon(
+                                Icons.logout_rounded,
+                                color: purple,
+                                size: 21,
+                              ),
+                              tooltip: 'Logout',
                             ),
-                          ),
-                        ],
-                      ),
-                      IconButton(
-                        onPressed: _isLoggingOut ? null : _logout,
-                        icon: const Icon(
-                          Icons.logout_rounded,
-                          color: Colors.white,
+                          ],
                         ),
-                        tooltip: 'Logout',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Pantau kegiatan siswa dalam bakat\n'
-                    'yang mereka minati',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                      height: 1.4,
+
+                        const SizedBox(height: 8),
+
+                        // SAPAAN
+                        const Text(
+                          'Selamat Datang,',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                        ),
+
+                        const SizedBox(height: 3),
+
+                        const Text(
+                          'Pak Aris!',
+                          style: TextStyle(
+                            fontSize: 23,
+                            fontWeight: FontWeight.bold,
+                            color: darkPurple,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        const Text(
+                          'Berikut ringkasan data siswa dan '
+                          'perkembangan bakat.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.black54,
+                            height: 1.5,
+                          ),
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        // KARTU STATISTIK
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildStatCard(
+                                value: '120',
+                                label: 'Total Siswa',
+                                color: const Color(0xFF9188FF),
+                                icon: Icons.people_alt_outlined,
+                              ),
+                            ),
+                            const SizedBox(width: 9),
+                            Expanded(
+                              child: _buildStatCard(
+                                value: '20',
+                                label: 'Bakat Aktif',
+                                color: yellow,
+                                icon: Icons.star_outline_rounded,
+                              ),
+                            ),
+                            const SizedBox(width: 9),
+                            Expanded(
+                              child: _buildStatCard(
+                                value: '8',
+                                label: 'Kegiatan',
+                                color: const Color(0xFFB7A4FF),
+                                icon: Icons.event_note_outlined,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 25),
+
+                        // POTENSI TERBARU
+                        const Text(
+                          'Potensi Terbaru',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: darkPurple,
+                          ),
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        _buildStudentCard(
+                          name: 'Alya Nasmi',
+                          className: 'XI RPL 2',
+                          talent: 'Public Speaking',
+                          initial: 'A',
+                          avatarColor: Color(0xFFFFD9E8),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        _buildStudentCard(
+                          name: 'Siska Anjelin',
+                          className: 'XII RPL B',
+                          talent: 'Fotografi',
+                          initial: 'S',
+                          avatarColor: Color(0xFFE0DCFF),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        _buildStudentCard(
+                          name: 'Noufal Zaidan',
+                          className: 'XI RPL 1',
+                          talent: 'Desain',
+                          initial: 'N',
+                          avatarColor: Color(0xFFDDF3FF),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Menu Cepat
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  _buildQuickMenu(
-                    icon: Icons.people_alt_outlined,
-                    label: 'Data Siswa',
-                    color: purple,
-                    onTap: () {
-                      Navigator.pushNamed(context, '/data_siswa');
-                    },
-                  ),
-                  const SizedBox(width: 12),
-                  _buildQuickMenu(
-                    icon: Icons.assignment_outlined,
-                    label: 'Penilaian',
-                    color: Colors.green,
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/penilaian_bakat',
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 12),
-                  _buildQuickMenu(
-                    icon: Icons.history,
-                    label: 'Riwayat',
-                    color: Colors.orange,
-                    onTap: () {
-                      setState(() {
-                        _currentIndex = 2;
-                      });
-                    },
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 28),
-
-            // Judul Siswa Terbaru
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Siswa Terbaru',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: darkPurple,
-                  ),
                 ),
-              ),
-            ),
 
-            const SizedBox(height: 12),
-
-            // List Siswa
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: [
-                  _buildStudentCard(
-                    name: 'Noufal Zaidan',
-                    className: 'XI RPL 1',
-                    talent: 'Desain',
-                  ),
-                  _buildStudentCard(
-                    name: 'Alya Nasmi',
-                    className: 'XI RPL 2',
-                    talent: 'Public Speaking',
-                  ),
-                  _buildStudentCard(
-                    name: 'Siska Anjelin',
-                    className: 'XII RPL B',
-                    talent: 'Fotografi',
-                  ),
-                  _buildStudentCard(
-                    name: 'Rizky Maulana',
-                    className: 'X RPL 1',
-                    talent: 'Coding',
-                  ),
-                ],
-              ),
+                // NAVIGASI BAWAH
+                _buildBottomNav(),
+              ],
             ),
-          ],
+          ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
-  // Menu Cepat
-  Widget _buildQuickMenu({
-    required IconData icon,
+  // KARTU STATISTIK
+  Widget _buildStatCard({
+    required String value,
     required String label,
     required Color color,
-    required VoidCallback onTap,
+    required IconData icon,
   }) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        vertical: 14,
+        horizontal: 4,
+      ),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            icon,
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.04),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            size: 21,
           ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 22),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF333333),
-                ),
-              ),
-            ],
+          const SizedBox(height: 7),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 19,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
           ),
-        ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 11,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // Card Siswa
+  // KARTU SISWA
   Widget _buildStudentCard({
     required String name,
     required String className,
     required String talent,
+    required String initial,
+    required Color avatarColor,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
             offset: const Offset(0, 3),
           ),
         ],
@@ -305,56 +363,63 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
       child: Row(
         children: [
           CircleAvatar(
-            radius: 26,
-            backgroundColor: const Color(0xFFE8E7FF),
+            radius: 22,
+            backgroundColor: avatarColor,
             child: Text(
-              name[0],
+              initial,
               style: const TextStyle(
-                color: purple,
+                color: darkPurple,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
             ),
           ),
-          const SizedBox(width: 14),
+
+          const SizedBox(width: 11),
+
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
               children: [
                 Text(
                   name,
                   style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
                     color: darkPurple,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   className,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey,
                   ),
                 ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 5,
-            ),
-            decoration: BoxDecoration(
-              color: purple.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              talent,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: purple,
+
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 6,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF0D2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                talent,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFFB47A16),
+                ),
               ),
             ),
           ),
@@ -363,38 +428,29 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
     );
   }
 
-  // Bottom Navigation
+  // BOTTOM NAVIGATION
   Widget _buildBottomNav() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, -3),
           ),
         ],
       ),
       child: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-
-          if (index == 1) {
-            Navigator.pushNamed(context, '/data_siswa');
-          } else if (index == 2) {
-            Navigator.pushNamed(context, '/penilaian_bakat');
-          }
-        },
+        onTap: _onNavTap,
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
         selectedItemColor: purple,
-        unselectedItemColor: Colors.grey[400],
-        selectedFontSize: 11,
-        unselectedFontSize: 11,
+        unselectedItemColor: Colors.grey.shade400,
+        selectedFontSize: 10,
+        unselectedFontSize: 10,
+        iconSize: 20,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home_rounded),
@@ -402,14 +458,18 @@ class _DashboardGuruPageState extends State<DashboardGuruPage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.people_alt_outlined),
-            label: 'Siswa',
+            label: 'Data Siswa',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history_rounded),
+            label: 'Riwayat',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.assignment_outlined),
             label: 'Penilaian',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
+            icon: Icon(Icons.person_outline_rounded),
             label: 'Profil',
           ),
         ],

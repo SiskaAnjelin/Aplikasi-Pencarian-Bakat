@@ -18,6 +18,9 @@ import 'guru/dashboard_guru_page.dart' as guru;
 import 'guru/data_siswa_page.dart';
 import 'guru/detail_bakat_page.dart' as guru_detail;
 import 'guru/penilaian_bakat_page.dart';
+import 'guru/riwayat_kegiatan_page.dart';
+import 'guru/profil_guru_page.dart';
+import 'guru/bidang_keahlian_page.dart';
 
 // ADMIN
 import 'admin/dashboard_admin_page.dart';
@@ -88,6 +91,15 @@ class NiskalaApp extends StatelessWidget {
 
         '/penilaian_bakat': (context) =>
             const PenilaianBakatPage(),
+
+        '/riwayat_kegiatan': (context) =>
+          const RiwayatKegiatanPage(),
+
+        '/profil_guru': (context) =>
+            const ProfilGuruPage(),
+
+        '/bidang_keahlian': (context) =>
+            const BidangKeahlianPage(),
 
         // ADMIN
         '/dashboard_admin': (context) =>
