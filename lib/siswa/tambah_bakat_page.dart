@@ -10,68 +10,56 @@ class TambahBakatPage extends StatefulWidget {
 }
 
 class _TambahBakatPageState extends State<TambahBakatPage> {
+  static const Color purple = Color(0xFF6C5CFF);
+  static const Color darkPurple = Color(0xFF29264F);
+
   final supabase = Supabase.instance.client;
+  final _formKey = GlobalKey<FormState>();
 
-  String? _selectedBakatId;
+  final TextEditingController _namaSiswaController =
+      TextEditingController();
 
-  List<Map<String, dynamic>> _daftarBakat = [];
+  final TextEditingController _kelasController =
+      TextEditingController();
 
-  bool _isLoading = true;
+  final TextEditingController _namaBakatController =
+      TextEditingController();
+
+  final TextEditingController _deskripsiController =
+      TextEditingController();
+
+  String? _selectedKategori;
   bool _isSaving = false;
 
+  // 8 KATEGORI BAKAT
+  final List<String> _kategoriList = [
+    'Seni',
+    'Olahraga',
+    'Musik',
+    'Akademik',
+    'Teknologi',
+    'Bahasa',
+    'Multimedia',
+    'Coding',
+  ];
+
   @override
-  void initState() {
-    super.initState();
-    _ambilDataBakat();
+  void dispose() {
+    _namaSiswaController.dispose();
+    _kelasController.dispose();
+    _namaBakatController.dispose();
+    _deskripsiController.dispose();
+    super.dispose();
   }
 
-  // Mengambil daftar bakat dari Supabase
-  Future<void> _ambilDataBakat() async {
-    try {
-      final data = await supabase
-          .from('bakat')
-          .select('id_bakat, nama_bakat, deskripsi')
-          .order('nama_bakat');
-
-      if (!mounted) return;
-
-      setState(() {
-        _daftarBakat = List<Map<String, dynamic>>.from(data);
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _isLoading = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal mengambil data bakat: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  // Deskripsi bakat yang dipilih
-  String get _deskripsiBakat {
-    final bakat = _daftarBakat.firstWhere(
-      (item) => item['id_bakat'].toString() == _selectedBakatId,
-      orElse: () => {},
-    );
-
-    return bakat['deskripsi']?.toString() ?? '';
-  }
-
-  // Menyimpan pengajuan ke Supabase
+  // SIMPAN DATA BAKAT
   Future<void> _simpanBakat() async {
-    if (_selectedBakatId == null) {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_selectedKategori == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Silakan pilih bakat terlebih dahulu!'),
-          backgroundColor: Colors.red,
+          content: Text('Silakan pilih kategori bakat!'),
         ),
       );
       return;
@@ -82,30 +70,38 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
     });
 
     try {
-      // Memeriksa akun yang sedang login
       final user = supabase.auth.currentUser;
 
       if (user == null) {
         throw Exception('Silakan login terlebih dahulu.');
       }
 
-      // Mengambil ID siswa berdasarkan user_id
+      // MENGAMBIL ID SISWA
       final siswa = await supabase
           .from('siswa')
-          .select('id_siswa, nama_siswa')
+          .select('id_siswa')
           .eq('user_id', user.id)
           .maybeSingle();
 
       if (siswa == null) {
-        throw Exception(
-          'Data siswa tidak ditemukan. Hubungi admin.',
-        );
+        throw Exception('Data siswa tidak ditemukan.');
       }
 
-      // Menyimpan pengajuan bakat
+      // MENAMBAHKAN DATA BAKAT
+      final bakat = await supabase
+          .from('bakat')
+          .insert({
+            'nama_bakat': _namaBakatController.text.trim(),
+            'kategori': _selectedKategori,
+            'deskripsi': _deskripsiController.text.trim(),
+          })
+          .select('id_bakat')
+          .single();
+
+      // MENYIMPAN PENGAJUAN SISWA
       await supabase.from('pengajuan_bakat').insert({
         'id_siswa': siswa['id_siswa'],
-        'id_bakat': _selectedBakatId,
+        'id_bakat': bakat['id_bakat'],
         'status': 'pending',
       });
 
@@ -124,7 +120,7 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal mengirim pengajuan: $e'),
+          content: Text('Gagal menyimpan bakat: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -137,167 +133,321 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      color: const Color(0xFFF8F9FA),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: 430,
+  // INPUT FORM
+  Widget _buildInput({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
           ),
-          child: Scaffold(
-            backgroundColor: const Color(0xFFF8F9FA),
-
-            appBar: AppBar(
-              backgroundColor: Colors.white,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Colors.black87,
-                ),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+        ),
+        const SizedBox(height: 6),
+        SizedBox(
+          height: 38,
+          child: TextFormField(
+            controller: controller,
+            style: const TextStyle(fontSize: 11),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(
+                fontSize: 10,
+                color: Colors.black54,
               ),
-              title: const Text(
-                'Tambah Bakat',
-                style: TextStyle(
-                  color: Color(0xFF202044),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 13,
+                vertical: 9,
+              ),
+              filled: true,
+              fillColor: Colors.white,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(22),
+                borderSide: const BorderSide(
+                  color: Color(0xFF77718F),
+                  width: 0.8,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(22),
+                borderSide: const BorderSide(
+                  color: purple,
+                  width: 1.2,
+                ),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(22),
+                borderSide: const BorderSide(
+                  color: Colors.red,
+                ),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(22),
+                borderSide: const BorderSide(
+                  color: Colors.red,
                 ),
               ),
             ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Bagian ini wajib diisi';
+              }
+              return null;
+            },
+          ),
+        ),
+      ],
+    );
+  }
 
-            body: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(
-                      color: Color(0xFF6C5CFF),
-                    ),
-                  )
-                : SingleChildScrollView(
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Center(
+          child: Container(
+            width: 320,
+            height: 680,
+            margin: const EdgeInsets.all(8),
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(40),
+            ),
+            child: Scaffold(
+              backgroundColor: Colors.white,
+              body: SafeArea(
+                child: Form(
+                  key: _formKey,
+                  child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.fromLTRB(
+                      30, 12, 30, 20,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // HEADER
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: const Icon(
+                                Icons.arrow_back,
+                                size: 19,
+                                color: Colors.black,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            const Text(
+                              'Tambah Bakat (Form)',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: darkPurple,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 34),
+
+                        // NAMA SISWA
+                        _buildInput(
+                          label: 'Nama Siswa',
+                          hint: 'Masukkan nama siswa',
+                          controller: _namaSiswaController,
+                        ),
+
+                        const SizedBox(height: 5),
+
+                        // KELAS
+                        _buildInput(
+                          label: 'Kelas',
+                          hint: 'Masukkan kelas',
+                          controller: _kelasController,
+                        ),
+
+                        const SizedBox(height: 5),
+
+                        // NAMA BAKAT
+                        _buildInput(
+                          label: 'Nama Bakat',
+                          hint: 'Masukkan nama bakat',
+                          controller: _namaBakatController,
+                        ),
+
+                        const SizedBox(height: 5),
+
+                        // KATEGORI
                         const Text(
-                          'Pilih Bakat',
+                          'Kategori',
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                             color: Colors.black87,
+                          ),
+                        ),
+
+                        const SizedBox(height: 6),
+
+                        SizedBox(
+                          height: 40,
+                          child: DropdownButtonFormField<String>(
+                            value: _selectedKategori,
+                            isExpanded: true,
+                            icon: const Icon(
+                              Icons.keyboard_arrow_down,
+                              size: 18,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Pilih kategori',
+                              hintStyle: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.black54,
+                              ),
+                              contentPadding:
+                                  const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(5),
+                                borderSide: const BorderSide(
+                                  color: purple,
+                                  width: 1,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(5),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFF77718F),
+                                  width: 0.9,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(5),
+                                borderSide: const BorderSide(
+                                  color: purple,
+                                  width: 1.2,
+                                ),
+                              ),
+                            ),
+                            items: _kategoriList.map((kategori) {
+                              return DropdownMenuItem<String>(
+                                value: kategori,
+                                child: Text(
+                                  kategori,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedKategori = value;
+                              });
+                            },
                           ),
                         ),
 
                         const SizedBox(height: 8),
 
-                        DropdownButtonFormField<String>(
-                          value: _selectedBakatId,
-                          isExpanded: true,
-                          decoration: InputDecoration(
-                            hintText: 'Pilih bakat yang kamu minati',
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding:
-                                const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFE0E0E0),
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF6C5CFF),
-                                width: 1.5,
-                              ),
-                            ),
-                          ),
-                          items: _daftarBakat.map((bakat) {
-                            return DropdownMenuItem<String>(
-                              value: bakat['id_bakat'].toString(),
-                              child: Text(
-                                bakat['nama_bakat'].toString(),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedBakatId = value;
-                            });
-                          },
-                        ),
-
-                        const SizedBox(height: 20),
-
+                        // DESKRIPSI MANUAL
                         const Text(
                           'Deskripsi',
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w500,
                             color: Colors.black87,
                           ),
                         ),
 
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
 
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: const Color(0xFFE0E0E0),
+                        TextFormField(
+                          controller: _deskripsiController,
+                          maxLines: 3,
+                          minLines: 2,
+                          style: const TextStyle(
+                            fontSize: 11,
+                          ),
+                          decoration: InputDecoration(
+                            hintText:
+                                'Ceritakan sedikit tentang bakatmu',
+                            hintStyle: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.black54,
+                            ),
+                            contentPadding: const EdgeInsets.all(13),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF77718F),
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF77718F),
+                                width: 0.8,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: const BorderSide(
+                                color: purple,
+                                width: 1.2,
+                              ),
                             ),
                           ),
-                          child: Text(
-                            _selectedBakatId == null
-                                ? 'Deskripsi bakat akan muncul di sini.'
-                                : _deskripsiBakat,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: _selectedBakatId == null
-                                  ? Colors.grey
-                                  : Colors.black87,
-                            ),
-                          ),
+                          validator: (value) {
+                            if (value == null ||
+                                value.trim().isEmpty) {
+                              return 'Deskripsi wajib diisi';
+                            }
+                            return null;
+                          },
                         ),
 
-                        const SizedBox(height: 35),
+                        const SizedBox(height: 24),
 
+                        // TOMBOL SIMPAN
                         SizedBox(
                           width: double.infinity,
-                          height: 50,
+                          height: 36,
                           child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color(0xFF6C5CFF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(16),
-                              ),
-                              elevation: 0,
-                            ),
                             onPressed:
-                                _isSaving || _daftarBakat.isEmpty
-                                    ? null
-                                    : _simpanBakat,
+                                _isSaving ? null : _simpanBakat,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: purple,
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor:
+                                  purple.withOpacity(0.6),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                            ),
                             child: _isSaving
                                 ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child:
-                                        CircularProgressIndicator(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
                                       color: Colors.white,
                                       strokeWidth: 2,
                                     ),
@@ -305,8 +455,7 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
                                 : const Text(
                                     'Simpan',
                                     style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
+                                      fontSize: 11,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -315,6 +464,9 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
                       ],
                     ),
                   ),
+                ),
+              ),
+            ),
           ),
         ),
       ),

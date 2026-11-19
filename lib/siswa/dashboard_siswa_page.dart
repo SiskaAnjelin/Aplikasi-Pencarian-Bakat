@@ -1,104 +1,19 @@
 
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DashboardSiswaPage extends StatefulWidget {
   const DashboardSiswaPage({super.key});
 
   @override
-  State<DashboardSiswaPage> createState() => _DashboardSiswaPageState();
+  State<DashboardSiswaPage> createState() =>
+      _DashboardSiswaPageState();
 }
 
 class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
   static const Color purple = Color(0xFF6C63FF);
-  static const Color yellow = Color(0xFFFFC857);
   static const Color darkPurple = Color(0xFF29264F);
 
   int _currentIndex = 0;
-  bool _isLoggingOut = false;
-
-  // LOGOUT SUPABASE
-  Future<void> _logout() async {
-    if (_isLoggingOut) return;
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: const Text(
-          'Konfirmasi Logout',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: darkPurple,
-          ),
-        ),
-        content: const Text(
-          'Apakah kamu yakin ingin keluar dari akun Niskala?',
-          style: TextStyle(fontSize: 13),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogContext, false);
-            },
-            child: const Text(
-              'Batal',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext, true);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: purple,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true || !mounted) return;
-
-    setState(() {
-      _isLoggingOut = true;
-    });
-
-    try {
-      await Supabase.instance.client.auth.signOut();
-
-      if (!mounted) return;
-
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/login',
-        (route) => false,
-      );
-    } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal logout: $e'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoggingOut = false;
-        });
-      }
-    }
-  }
 
   // NAVIGASI BOTTOM BAR
   void _onNavTap(int index) {
@@ -124,6 +39,11 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
     }
   }
 
+  // NAVIGASI KE TAMBAH BAKAT
+  void _keTambahBakat() {
+    Navigator.pushNamed(context, '/tambah_bakat');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -136,216 +56,143 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
             margin: const EdgeInsets.all(16),
             clipBehavior: Clip.hardEdge,
             decoration: BoxDecoration(
-              color: const Color(0xFFF8F9FC),
+              color: Colors.white,
               borderRadius: BorderRadius.circular(40),
             ),
             child: Scaffold(
-              backgroundColor: const Color(0xFFF8F9FC),
+              backgroundColor: Colors.white,
+
+              // BODY DASHBOARD
               body: SafeArea(
-                child: Column(
-                  children: [
-                    // HEADER
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                      decoration: const BoxDecoration(
-                        color: purple,
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(28),
-                          bottomRight: Radius.circular(28),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 18),
+
+                      // JUDUL DASHBOARD
+                      const Text(
+                        'Dashboard Siswa',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: darkPurple,
                         ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // SAPAAN DAN LOGOUT
-                          Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Expanded(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Halo, Alya!',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      'Selamat datang kembali',
-                                      style: TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const CircleAvatar(
-                                    radius: 24,
-                                    backgroundColor: Color(0x336FFFFFF),
-                                    child: Icon(
-                                      Icons.person,
-                                      color: Colors.white,
-                                      size: 28,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    onPressed:
-                                        _isLoggingOut ? null : _logout,
-                                    tooltip: 'Logout',
-                                    icon: const Icon(
-                                      Icons.logout_rounded,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
 
-                          const SizedBox(height: 18),
+                      const SizedBox(height: 18),
 
-                          // CARD BAKAT SAYA
-                          InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/daftar_bakat',
-                              );
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(10),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: const Icon(
-                                      Icons.star_rounded,
-                                      color: Colors.white,
-                                      size: 26,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 14),
-                                  const Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Bakat Saya',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 15,
-                                          ),
-                                        ),
-                                        SizedBox(height: 2),
-                                        Text(
-                                          '3 bakat terdaftar',
-                                          style: TextStyle(
-                                            color: Colors.white70,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const Icon(
-                                    Icons.arrow_forward_ios,
-                                    color: Colors.white70,
-                                    size: 16,
-                                  ),
-                                ],
+                      // SAPAAN
+                      const Text(
+                        'Hai, Alya!',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // DESKRIPSI
+                      const Text(
+                        'Saatnya Eksplorasi Bakatmu\n'
+                        'Dan Raih Masa Depan Yang Cerah!',
+                        style: TextStyle(
+                          fontSize: 9,
+                          height: 1.5,
+                          color: Colors.black87,
+                        ),
+                      ),
+
+                      const SizedBox(height: 17),
+
+                      // TOMBOL TEMUKAN BAKAT
+                      Center(
+                        child: SizedBox(
+                          width: 139,
+                          height: 32,
+                          child: ElevatedButton(
+                            onPressed: _keTambahBakat,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: purple,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: EdgeInsets.zero,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // JUDUL SECTION
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Bakat Populer',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF1A1A2E),
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add,
+                                  size: 15,
+                                ),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Temukan Bakat',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 14),
+                      const SizedBox(height: 28),
 
-                    // GRID BAKAT
-                    Expanded(
-                      child: GridView.count(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 14,
-                        mainAxisSpacing: 14,
-                        childAspectRatio: 1.1,
-                        children: [
-                          _buildBakatCard(
-                            'Menggambar',
-                            Icons.brush_outlined,
-                            purple,
-                          ),
-                          _buildBakatCard(
-                            'Matematika',
-                            Icons.calculate_outlined,
-                            const Color(0xFF4CAF50),
-                          ),
-                          _buildBakatCard(
-                            'Menyanyi',
-                            Icons.music_note_outlined,
-                            yellow,
-                          ),
-                          _buildBakatCard(
-                            'Coding',
-                            Icons.code,
-                            const Color(0xFF2196F3),
-                          ),
-                          _buildBakatCard(
-                            'Menari',
-                            Icons.nightlife,
-                            const Color(0xFFE91E63),
-                          ),
-                          _buildBakatCard(
-                            'Olahraga',
-                            Icons.sports_soccer,
-                            const Color(0xFF009688),
-                          ),
-                        ],
+                      // JUDUL BAKAT SAYA
+                      const Text(
+                        'Bakat Saya',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
                       ),
-                    ),
-                  ],
+
+                      const SizedBox(height: 23),
+
+                      // LIST BAKAT
+                      _buildBakatCard(
+                        title: 'Menggambar',
+                        kategori: 'Seni',
+                        status: 'Berkembang',
+                        icon: Icons.palette_rounded,
+                        color: const Color(0xFFFFB74D),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      _buildBakatCard(
+                        title: 'Menyanyi',
+                        kategori: 'Seni',
+                        status: 'Unggul',
+                        icon: Icons.music_note_rounded,
+                        color: const Color(0xFF9C83FF),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      _buildBakatCard(
+                        title: 'Coding',
+                        kategori: 'Teknologi',
+                        status: 'Potensial',
+                        icon: Icons.code_rounded,
+                        color: const Color(0xFF3D78D8),
+                      ),
+
+                      const Spacer(),
+                    ],
+                  ),
                 ),
               ),
 
@@ -358,46 +205,94 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
     );
   }
 
-  // CARD BAKAT
-  Widget _buildBakatCard(
-    String title,
-    IconData icon,
-    Color color,
-  ) {
+  // CARD BAKAT SAYA
+  Widget _buildBakatCard({
+    required String title,
+    required String kategori,
+    required String status,
+    required IconData icon,
+    required Color color,
+  }) {
     return Container(
+      width: double.infinity,
+      height: 38,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 7,
+        vertical: 4,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(
+          color: Colors.grey.shade500,
+          width: 0.8,
+        ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Row(
         children: [
+          // ICON BAKAT
           Container(
-            padding: const EdgeInsets.all(14),
+            width: 27,
+            height: 27,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
+              color: color.withOpacity(0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
+              size: 17,
               color: color,
-              size: 28,
             ),
           ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: Color(0xFF1A1A2E),
+
+          const SizedBox(width: 9),
+
+          // NAMA DAN KATEGORI
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Kategori: $kategori',
+                  style: const TextStyle(
+                    fontSize: 7,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // STATUS BAKAT
+          Container(
+            width: 65,
+            height: 15,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFFFFC857),
+                width: 0.8,
+              ),
+            ),
+            child: Text(
+              status,
+              style: const TextStyle(
+                fontSize: 7,
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -408,43 +303,70 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
   // BOTTOM NAVIGATION
   Widget _buildBottomNav() {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
+      height: 55,
+      color: Colors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(
+            icon: Icons.home_outlined,
+            title: 'Beranda',
+            index: 0,
+          ),
+          _buildNavItem(
+            icon: Icons.library_books_outlined,
+            title: 'Bakat',
+            index: 1,
+          ),
+          _buildNavItem(
+            icon: Icons.more_horiz_rounded,
+            title: 'Detail',
+            index: 2,
+          ),
+          _buildNavItem(
+            icon: Icons.person,
+            title: 'Profil',
+            index: 3,
           ),
         ],
       ),
-      child: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onNavTap,
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: purple,
-        unselectedItemColor: Colors.grey,
-        selectedFontSize: 11,
-        unselectedFontSize: 11,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_rounded),
-            label: 'Beranda',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.star_outline),
-            label: 'Bakat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined),
-            label: 'Jadwal',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profil',
-          ),
-        ],
+    );
+  }
+
+  // ITEM BOTTOM NAVIGATION
+  Widget _buildNavItem({
+    required IconData icon,
+    required String title,
+    required int index,
+  }) {
+    final bool active = _currentIndex == index;
+
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          _onNavTap(index);
+        },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 21,
+              color: active ? purple : Colors.black87,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 8,
+                color: Colors.black,
+                fontWeight: active
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

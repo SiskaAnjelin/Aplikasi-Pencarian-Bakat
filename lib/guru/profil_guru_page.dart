@@ -1,7 +1,94 @@
+
 import 'package:flutter/material.dart';
 
 class ProfilGuruPage extends StatelessWidget {
   const ProfilGuruPage({super.key});
+
+  static const Color purple = Color(0xFF56518D);
+  static const Color red = Color(0xFFFF3838);
+
+  // NAVIGASI BOTTOM BAR
+  void _onNavTap(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(
+          context,
+          '/dashboard_guru',
+        );
+        break;
+
+      case 1:
+        Navigator.pushReplacementNamed(
+          context,
+          '/data_siswa',
+        );
+        break;
+
+      case 2:
+        Navigator.pushReplacementNamed(
+          context,
+          '/riwayat_guru',
+        );
+        break;
+
+      case 3:
+        // Sudah berada di halaman profil
+        break;
+    }
+  }
+
+  // KONFIRMASI KELUAR
+  Future<void> _konfirmasiKeluar(BuildContext context) async {
+    final konfirmasi = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+        title: const Text(
+          'Konfirmasi Keluar',
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: const Text(
+          'Apakah kamu yakin ingin keluar dari akun?',
+          style: TextStyle(fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext, false);
+            },
+            child: const Text(
+              'Batal',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(dialogContext, true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: red,
+              foregroundColor: Colors.white,
+              elevation: 0,
+            ),
+            child: const Text('Ya, Keluar'),
+          ),
+        ],
+      ),
+    );
+
+    if (konfirmasi == true && context.mounted) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/login',
+        (route) => false,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +99,7 @@ class ProfilGuruPage extends StatelessWidget {
           child: Container(
             width: 320,
             height: 680,
-            margin: const EdgeInsets.all(16),
+            margin: const EdgeInsets.all(8),
             clipBehavior: Clip.hardEdge,
             decoration: BoxDecoration(
               color: Colors.white,
@@ -36,7 +123,7 @@ class ProfilGuruPage extends StatelessWidget {
                     onPressed: () => Navigator.pop(context),
                   ),
                   title: const Text(
-                    "Profil Guru",
+                    'Profil Guru',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 15,
@@ -49,6 +136,7 @@ class ProfilGuruPage extends StatelessWidget {
 
               // BODY
               body: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 12,
@@ -56,7 +144,6 @@ class ProfilGuruPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     // PROFIL GURU
                     Row(
                       children: [
@@ -80,26 +167,22 @@ class ProfilGuruPage extends StatelessWidget {
                             },
                           ),
                         ),
-
                         const SizedBox(width: 14),
-
                         const Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Pak Aris",
+                                'Pak Aris',
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.black,
                                 ),
                               ),
-
                               SizedBox(height: 3),
-
                               Text(
-                                "Guru Penguji • Akademi",
+                                'Guru Penguji • Akademi',
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: Colors.grey,
@@ -113,7 +196,6 @@ class ProfilGuruPage extends StatelessWidget {
 
                     const SizedBox(height: 18),
 
-                    // GARIS PEMBATAS
                     const Divider(
                       color: Color(0xFFD0D0D0),
                       thickness: 1,
@@ -123,7 +205,7 @@ class ProfilGuruPage extends StatelessWidget {
 
                     // BIDANG KEAHLIAN
                     const Text(
-                      "Bidang Keahlian",
+                      'Bidang Keahlian',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -133,18 +215,17 @@ class ProfilGuruPage extends StatelessWidget {
 
                     const SizedBox(height: 8),
 
-                    // LABEL BIDANG
                     Row(
                       children: [
-                        _buildSkill("Coding"),
+                        _buildSkill('Coding'),
                         const SizedBox(width: 10),
-                        _buildSkill("Seni"),
+                        _buildSkill('Seni'),
                       ],
                     ),
 
                     const SizedBox(height: 12),
 
-                    // TOMBOL KELOLA BIDANG
+                    // KELOLA BIDANG
                     InkWell(
                       onTap: () {
                         Navigator.pushNamed(
@@ -172,12 +253,10 @@ class ProfilGuruPage extends StatelessWidget {
                               size: 18,
                               color: Colors.black,
                             ),
-
                             SizedBox(width: 7),
-
                             Expanded(
                               child: Text(
-                                "Kelola Bidang Keahlian",
+                                'Kelola Bidang Keahlian',
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: Colors.black,
@@ -185,7 +264,6 @@ class ProfilGuruPage extends StatelessWidget {
                                 ),
                               ),
                             ),
-
                             Icon(
                               Icons.chevron_right,
                               size: 18,
@@ -200,7 +278,7 @@ class ProfilGuruPage extends StatelessWidget {
 
                     // DATA PRIBADI
                     const Text(
-                      "Data Pribadi",
+                      'Data Pribadi',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -210,98 +288,49 @@ class ProfilGuruPage extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
-                    _buildData("NIP", "098765432123"),
-                    _buildData("Email", "arisdigital@gmail.com"),
-                    _buildData("Alamat", "Jl. Bandung Timur"),
-                    _buildData("No. Hp", "0890987567"),
+                    _buildData('NIP', '098765432123'),
+                    _buildData('Email', 'arisdigital@gmail.com'),
+                    _buildData('Alamat', 'Jl. Bandung Timur'),
+                    _buildData('No. Hp', '0890987567'),
 
                     const SizedBox(height: 18),
 
-                  // TOMBOL KELUAR
-Align(
-  alignment: Alignment.centerRight,
-  child: SizedBox(
-    height: 32,
-    child: ElevatedButton.icon(
-      onPressed: () async {
-        final konfirmasi = await showDialog<bool>(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-            title: const Text(
-              "Konfirmasi Keluar",
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            content: const Text(
-              "Apakah kamu yakin ingin keluar dari akun?",
-              style: TextStyle(fontSize: 13),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(dialogContext, false);
-                },
-                child: const Text(
-                  "Batal",
-                  style: TextStyle(
-                    color: Colors.grey,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(dialogContext, true);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF3838),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                ),
-                child: const Text("Ya, Keluar"),
-              ),
-            ],
-          ),
-        );
+                    // TOMBOL KELUAR
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: SizedBox(
+                        height: 32,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            _konfirmasiKeluar(context);
+                          },
+                          icon: const Icon(
+                            Icons.logout,
+                            size: 16,
+                          ),
+                          label: const Text(
+                            'Keluar',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: red,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
 
-        if (konfirmasi == true && context.mounted) {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/login',
-            (route) => false,
-          );
-        }
-      },
-      icon: const Icon(
-        Icons.logout,
-        size: 16,
-      ),
-      label: const Text(
-        "Keluar",
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFFFF3838),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 14,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-      ),
-    ),
-  ),
-),
-
+                    const SizedBox(height: 18),
                   ],
                 ),
               ),
@@ -319,27 +348,42 @@ Align(
                   ),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildNavItem(
-                      Icons.home_outlined,
-                      "Beranda",
-                      false,
+                    Expanded(
+                      child: _buildNavItem(
+                        context,
+                        Icons.home_outlined,
+                        'Beranda',
+                        0,
+                        false,
+                      ),
                     ),
-                    _buildNavItem(
-                      Icons.people,
-                      "Daftar Siswa",
-                      false,
+                    Expanded(
+                      child: _buildNavItem(
+                        context,
+                        Icons.people,
+                        'Daftar Siswa',
+                        1,
+                        false,
+                      ),
                     ),
-                    _buildNavItem(
-                      Icons.history,
-                      "Riwayat",
-                      false,
+                    Expanded(
+                      child: _buildNavItem(
+                        context,
+                        Icons.history,
+                        'Riwayat',
+                        2,
+                        false,
+                      ),
                     ),
-                    _buildNavItem(
-                      Icons.person,
-                      "Profil",
-                      true,
+                    Expanded(
+                      child: _buildNavItem(
+                        context,
+                        Icons.person,
+                        'Profil',
+                        3,
+                        true,
+                      ),
                     ),
                   ],
                 ),
@@ -389,17 +433,14 @@ Align(
               ),
             ),
           ),
-
           const Text(
-            ":",
+            ':',
             style: TextStyle(
               fontSize: 10,
               color: Colors.black,
             ),
           ),
-
           const SizedBox(width: 12),
-
           Expanded(
             child: Text(
               value,
@@ -416,37 +457,41 @@ Align(
   }
 
   // WIDGET BOTTOM NAVIGATION
-  static Widget _buildNavItem(
+  Widget _buildNavItem(
+    BuildContext context,
     IconData icon,
     String title,
+    int index,
     bool active,
   ) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          icon,
-          size: 21,
-          color: active
-              ? const Color(0xFF56518D)
-              : Colors.grey.shade700,
+    return InkWell(
+      onTap: () {
+        _onNavTap(context, index);
+      },
+      child: SizedBox(
+        height: 60,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 21,
+              color: active ? purple : Colors.grey.shade700,
+            ),
+            const SizedBox(height: 3),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 8,
+                color: active ? purple : Colors.black,
+                fontWeight:
+                    active ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
         ),
-
-        const SizedBox(height: 3),
-
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 8,
-            color: active
-                ? const Color(0xFF56518D)
-                : Colors.black,
-            fontWeight: active
-                ? FontWeight.bold
-                : FontWeight.normal,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'penilaian_bakat_page.dart';
 
 class DetailBakatGuruPage extends StatelessWidget {
   final String siswaName;
@@ -9,347 +8,321 @@ class DetailBakatGuruPage extends StatelessWidget {
   const DetailBakatGuruPage({
     super.key,
     this.siswaName = 'Naufal Zaidan',
-    this.kelas = 'XI RPL 1',
+    this.kelas = 'XII RPL B',
   });
 
   static const Color purple = Color(0xFF6C5CFF);
   static const Color darkPurple = Color(0xFF202044);
+  static const Color lightPurple = Color(0xFFEDEBFF);
+  static const Color yellow = Color(0xFFFFC857);
 
-  static const List<String> rekomendasiList = [
-    'Ikut lomba menyanyi',
-    'Gabung ekstrakurikuler paduan suara',
-    'Membuat konten cover lagu',
-    'Mengikuti pelatihan vokal',
-    'Berlatih teknik pernapasan dan intonasi',
+  final List<Map<String, dynamic>> rekomendasiList = const [
+    {
+      'judul': 'Uji Desain Gratis',
+      'tanggal': '12 Nov 2026 • 08.30 - 10.00',
+      'icon': Icons.edit_note_rounded,
+    },
+    {
+      'judul': 'Latihan Kreativitas Desain',
+      'tanggal': '13 Nov 2026 • 07.00 - 09.15',
+      'icon': Icons.image_search_outlined,
+    },
+    {
+      'judul': 'Uji Desain UI/UX',
+      'tanggal': '16 Nov 2026 • 09.00 - 10.30',
+      'icon': Icons.view_in_ar_outlined,
+    },
   ];
 
   @override
   Widget build(BuildContext context) {
-    final bakatList = [
-      {
-        'nama': 'Menyanyi',
-        'kategori': 'Seni',
-        'status': 'Disetujui',
-      },
-      {
-        'nama': 'Coding',
-        'kategori': 'Akademik',
-        'status': 'Pending',
-      },
-    ];
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            size: 20,
-            color: darkPurple,
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Detail Bakat',
-          style: TextStyle(
-            color: darkPurple,
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Informasi Siswa
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: const Color(0xFFE8E7FF),
-                    child: Text(
-                      siswaName.isNotEmpty
-                          ? siswaName[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: purple,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    siswaName,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: darkPurple,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    kelas,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Center(
+          child: Container(
+            width: 320,
+            height: 680,
+            margin: const EdgeInsets.all(16),
+            clipBehavior: Clip.hardEdge,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(40),
             ),
 
-            const SizedBox(height: 24),
+            child: Scaffold(
+              backgroundColor: Colors.white,
 
-            // Daftar Bakat
-            const Text(
-              'Daftar Bakat',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: darkPurple,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            ...bakatList.map((b) {
-              final approved = b['status'] == 'Disetujui';
-
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PenilaianBakatPage(
-                        siswaName: siswaName,
-                        bakatName: b['nama']!,
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    // HEADER
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        12, 12, 16, 8,
+                      ),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: const Icon(
+                              Icons.arrow_back,
+                              size: 20,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Detail Bakat',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                },
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: purple.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
+
+                    // CONTENT
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
                         ),
-                        child: const Icon(
-                          Icons.star_rounded,
-                          color: purple,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              b['nama']!,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 15,
-                                color: darkPurple,
-                              ),
+                            // PROFIL SISWA
+                            Row(
+                              children: [
+                                Container(
+                                  width: 52,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    color: lightPurple,
+                                    borderRadius:
+                                        BorderRadius.circular(14),
+                                  ),
+                                  clipBehavior: Clip.hardEdge,
+                                  child: Image.asset(
+                                    'assets/images/foto noufal.jpeg',
+                                    fit: BoxFit.cover,
+                                    errorBuilder:
+                                        (context, error, stackTrace) {
+                                      return const Icon(
+                                        Icons.person,
+                                        size: 35,
+                                        color: purple,
+                                      );
+                                    },
+                                  ),
+                                ),
+
+                                const SizedBox(width: 12),
+
+                                Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      siswaName,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      kelas,
+                                      style: const TextStyle(
+                                        fontSize: 9,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                            Text(
-                              b['kategori']!,
+
+                            const SizedBox(height: 22),
+
+                            // JUDUL BAKAT DAN STATUS
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Bakat Seni',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: yellow,
+                                    borderRadius:
+                                        BorderRadius.circular(20),
+                                  ),
+                                  child: const Text(
+                                    'Berkembang',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w600,
+                                      color: darkPurple,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 18),
+
+                            // DESKRIPSI BAKAT
+                            const Text(
+                              'Siswa menunjukkan kreativitas tinggi '
+                              'dalam bidang seni, terutama menggambar '
+                              'dan desain.',
                               style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
+                                fontSize: 9,
+                                height: 1.6,
+                                color: Colors.black87,
                               ),
                             ),
+
+                            const SizedBox(height: 25),
+
+                            // REKOMENDASI
+                            const Text(
+                              'Rekomendasi Pengujian',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+
+                            const SizedBox(height: 14),
+
+                            // LIST REKOMENDASI
+                            ...rekomendasiList.map((item) {
+                              return Container(
+                                width: double.infinity,
+                                height: 43,
+                                margin: const EdgeInsets.only(
+                                  bottom: 10,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  border: Border.all(
+                                    color: const Color(0xFF9B96C5),
+                                    width: 0.8,
+                                  ),
+                                  borderRadius:
+                                      BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      item['icon'] as IconData,
+                                      color: purple,
+                                      size: 25,
+                                    ),
+
+                                    const SizedBox(width: 9),
+
+                                    Expanded(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item['judul'] as String,
+                                            style: const TextStyle(
+                                              fontSize: 9,
+                                              fontWeight:
+                                                  FontWeight.w600,
+                                              color: darkPurple,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            item['tanggal'] as String,
+                                            style: const TextStyle(
+                                              fontSize: 8,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+
+                            const SizedBox(height: 10),
                           ],
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: approved
-                              ? Colors.green.withValues(alpha: 0.1)
-                              : Colors.orange.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          b['status']!,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: approved
-                                ? Colors.green
-                                : Colors.orange,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-
-            const SizedBox(height: 20),
-
-            // Ilustrasi Bakat
-            Container(
-              height: 150,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEDEBFF),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.music_note_rounded,
-                  size: 75,
-                  color: purple,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Rekomendasi Pengembangan Bakat
-            const Text(
-              'Rekomendasi Pengembangan Bakat',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: darkPurple,
-              ),
-            ),
-
-            const SizedBox(height: 14),
-
-            ...rekomendasiList.map((rekomendasi) {
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFFEAEAF2),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(9),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEDEBFF),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.event_note_outlined,
-                        size: 21,
-                        color: purple,
-                      ),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Text(
-                        rekomendasi,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: darkPurple,
+
+                    // TOMBOL LIHAT JADWAL
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        30, 8, 30, 20,
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 38,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pushNamed(
+                              context,
+                              '/detail_jadwal',
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: purple,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Lihat Jadwal',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
-              );
-            }),
-          ],
+              ),
+            ),
+          ),
         ),
-      ),
-
-      // Navigasi Bawah Guru
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: purple,
-        unselectedItemColor: Colors.grey,
-        selectedFontSize: 12,
-        unselectedFontSize: 12,
-        onTap: (index) {
-          if (index == 0) {
-            Navigator.pushReplacementNamed(
-              context,
-              '/dashboard_guru',
-            );
-          } else if (index == 1) {
-            Navigator.pushReplacementNamed(
-              context,
-              '/data_siswa',
-            );
-          } else if (index == 3) {
-            Navigator.pushReplacementNamed(
-              context,
-              '/penilaian_bakat',
-            );
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Beranda',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people_outline),
-            activeIcon: Icon(Icons.people),
-            label: 'Data Siswa',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.star_outline),
-            activeIcon: Icon(Icons.star),
-            label: 'Detail',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment_outlined),
-            activeIcon: Icon(Icons.assignment),
-            label: 'Penilaian',
-          ),
-        ],
       ),
     );
   }

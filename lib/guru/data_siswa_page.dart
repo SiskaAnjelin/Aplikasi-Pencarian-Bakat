@@ -18,8 +18,8 @@ class _DataSiswaPageState extends State<DataSiswaPage> {
   final List<Map<String, String>> _siswaList = [
     {
       "nama": "Alya Nasmi Rahma Putri",
-      "kelas": "XI RPL 1",
-      "bakat": "Menari",
+      "kelas": "XI RPL C",
+      "bakat": "Dance",
     },
     {
       "nama": "Siska Anjelin",
@@ -28,13 +28,13 @@ class _DataSiswaPageState extends State<DataSiswaPage> {
     },
     {
       "nama": "Noufal Zaidan Althaat Syaifudin",
-      "kelas": "XI TKJ 1",
-      "bakat": "Coding",
+      "kelas": "X TKJ 1",
+      "bakat": "Olahraga",
     },
     {
       "nama": "Nadya Ulya Putriniar",
-      "kelas": "XII TKJ 1",
-      "bakat": "Menggambar",
+      "kelas": "X TKJ A",
+      "bakat": "Teater",
     },
     {
       "nama": "Gabriel Joshua Andika Putra",
