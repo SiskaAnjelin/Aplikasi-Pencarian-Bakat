@@ -12,6 +12,7 @@ import 'siswa/detail_bakat_page.dart' as siswa_detail;
 import 'siswa/detail_jadwal_page.dart' as siswa_jadwal;
 import 'siswa/profil_siswa_page.dart' as siswa_profil;
 import 'siswa/tambah_bakat_page.dart';
+import 'siswa/bakat_saya_page.dart';
 
 // GURU
 import 'guru/dashboard_guru_page.dart' as guru;
@@ -75,6 +76,9 @@ class NiskalaApp extends StatelessWidget {
 
         '/detail_jadwal_siswa': (context) =>
             const siswa_jadwal.DetailJadwalPage(),
+
+        '/bakat_saya': (context) =>
+              const BakatSayaPage(),
 
         '/profil_siswa': (context) =>
             const siswa_profil.ProfilSiswaPage(),

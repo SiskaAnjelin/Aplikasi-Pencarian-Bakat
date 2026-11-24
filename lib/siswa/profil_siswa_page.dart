@@ -1,12 +1,100 @@
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class ProfilSiswaPage extends StatelessWidget {
+class ProfilSiswaPage extends StatefulWidget {
   const ProfilSiswaPage({super.key});
 
-  final Color primaryColor = const Color(0xFF6C5CFF);
+  @override
+  State<ProfilSiswaPage> createState() => _ProfilSiswaPageState();
+}
 
-  // KONFIRMASI KELUAR
+class _ProfilSiswaPageState extends State<ProfilSiswaPage> {
+  static const Color primaryColor = Color(0xFF6C5CFF);
+
+  late Future<Map<String, dynamic>?> _dataSiswaFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _dataSiswaFuture = _ambilDataSiswa();
+  }
+
+  // ambil data siswa dari supabase
+  Future<Map<String, dynamic>?> _ambilDataSiswa() async {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+
+    if (user == null) {
+      return null;
+    }
+
+    final data = await supabase
+        .from('siswa')
+        .select('id_siswa, nama_siswa, kelas, user_id, foto_profil')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    debugPrint('EMAIL PROFIL: ${user.email}');
+    debugPrint('UID PROFIL: ${user.id}');
+    debugPrint('DATA PROFIL SISWA: $data');
+    debugPrint('FOTO PROFIL: ${data?['foto_profil']}');
+
+    return data;
+  }
+
+  // widget foto profil siswa
+  Widget _fotoProfil(String? url) {
+    if (url == null || url.trim().isEmpty) {
+      return const CircleAvatar(
+        radius: 26,
+        backgroundColor: Color(0xFFD3E3FD),
+        child: Icon(
+          Icons.person,
+          size: 30,
+          color: primaryColor,
+        ),
+      );
+    }
+
+    return CircleAvatar(
+      radius: 26,
+      backgroundColor: const Color(0xFFD3E3FD),
+      child: ClipOval(
+        child: Image.network(
+          url,
+          width: 52,
+          height: 52,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(
+              Icons.person,
+              size: 30,
+              color: primaryColor,
+            );
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) {
+              return child;
+            }
+
+            return const Center(
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  color: primaryColor,
+                  strokeWidth: 2,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // konfirmasi keluar
   Future<void> _konfirmasiKeluar(BuildContext context) async {
     final hasil = await showDialog<bool>(
       context: context,
@@ -37,9 +125,7 @@ class ProfilSiswaPage extends StatelessWidget {
               onPressed: () => Navigator.pop(context, false),
               style: OutlinedButton.styleFrom(
                 foregroundColor: primaryColor,
-                side: const BorderSide(
-                  color: Color(0xFF6C5CFF),
-                ),
+                side: const BorderSide(color: primaryColor),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -63,12 +149,29 @@ class ProfilSiswaPage extends StatelessWidget {
       },
     );
 
-    if (hasil == true && context.mounted) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/login',
-        (route) => false,
-      );
+    if (hasil == true) {
+      try {
+        // keluar dari supabase auth
+        await Supabase.instance.client.auth.signOut();
+
+        if (!mounted) return;
+
+        // kembali ke halaman login
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/login',
+          (route) => false,
+        );
+      } catch (e) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal keluar dari akun: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -89,7 +192,7 @@ class ProfilSiswaPage extends StatelessWidget {
           child: Scaffold(
             backgroundColor: Colors.white,
 
-            // BODY
+            // body
             body: SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -108,7 +211,7 @@ class ProfilSiswaPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // HEADER
+                            // header
                             Row(
                               children: [
                                 IconButton(
@@ -140,48 +243,91 @@ class ProfilSiswaPage extends StatelessWidget {
 
                             const SizedBox(height: 20),
 
-                            // FOTO DAN IDENTITAS SISWA
+                            // foto dan identitas siswa
                             Padding(
                               padding: const EdgeInsets.only(left: 6),
-                              child: Row(
-                                children: [
-                                  const CircleAvatar(
-                                    radius: 26,
-                                    backgroundColor: Color(0xFFD3E3FD),
-                                    backgroundImage: AssetImage(
-                                      'assets/images/foto alya.jpeg',
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  const Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Alya Nasmi',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.black,
+                              child: FutureBuilder<Map<String, dynamic>?>(
+                                future: _dataSiswaFuture,
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const SizedBox(
+                                      height: 55,
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          color: primaryColor,
+                                          strokeWidth: 2,
                                         ),
                                       ),
-                                      SizedBox(height: 3),
-                                      Text(
-                                        'XII RPL B',
-                                        style: TextStyle(
-                                          fontSize: 9,
-                                          color: Colors.black,
-                                        ),
+                                    );
+                                  }
+
+                                  if (snapshot.hasError) {
+                                    return const Text(
+                                      'Gagal mengambil data profil',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.red,
+                                      ),
+                                    );
+                                  }
+
+                                  final siswa = snapshot.data;
+
+                                  if (siswa == null) {
+                                    return const Text(
+                                      'Data siswa tidak ditemukan',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.red,
+                                      ),
+                                    );
+                                  }
+
+                                  final nama =
+                                      siswa['nama_siswa'] ?? 'Nama siswa';
+
+                                  final kelas =
+                                      siswa['kelas'] ?? 'Kelas belum tersedia';
+
+                                  final foto =
+                                      siswa['foto_profil']?.toString();
+
+                                  return Row(
+                                    children: [
+                                      _fotoProfil(foto),
+                                      const SizedBox(width: 12),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            nama.toString(),
+                                            style: const TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            kelas.toString(),
+                                            style: const TextStyle(
+                                              fontSize: 9,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ],
-                                  ),
-                                ],
+                                  );
+                                },
                               ),
                             ),
 
                             const SizedBox(height: 29),
 
-                            // MENU PROFIL
+                            // menu profil
                             Container(
                               width: double.infinity,
                               decoration: BoxDecoration(
@@ -229,7 +375,7 @@ class ProfilSiswaPage extends StatelessWidget {
 
                             const SizedBox(height: 27),
 
-                            // TOMBOL KELUAR
+                            // tombol keluar
                             Align(
                               alignment: Alignment.centerRight,
                               child: SizedBox(
@@ -279,7 +425,7 @@ class ProfilSiswaPage extends StatelessWidget {
               ),
             ),
 
-            // BOTTOM NAVIGATION
+            // bottom navigation
             bottomNavigationBar: Container(
               height: 55,
               color: Colors.white,
@@ -334,7 +480,7 @@ class ProfilSiswaPage extends StatelessWidget {
     );
   }
 
-  // WIDGET MENU PROFIL
+  // widget menu profil
   Widget _buildMenuItem({
     required IconData icon,
     required String title,
@@ -370,7 +516,7 @@ class ProfilSiswaPage extends StatelessWidget {
     );
   }
 
-  // WIDGET BOTTOM NAVIGATION
+  // widget bottom navigation
   Widget _buildNavItem({
     required IconData icon,
     required String title,
@@ -394,9 +540,8 @@ class ProfilSiswaPage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 8,
                 color: Colors.black,
-                fontWeight: active
-                    ? FontWeight.bold
-                    : FontWeight.normal,
+                fontWeight:
+                    active ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ],

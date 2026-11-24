@@ -1,11 +1,33 @@
+
 import 'package:flutter/material.dart';
 
-class SplashPage extends StatelessWidget {
+class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
+  @override
+  State<SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<SplashPage> {
   static const Color purple = Color(0xFF6C5CFF);
   static const Color yellow = Color(0xFFFFC857);
   static const Color darkPurple = Color(0xFF29264F);
+
+  bool _isPressed = false;
+
+  void _openLogin() async {
+    if (_isPressed) return;
+
+    setState(() {
+      _isPressed = true;
+    });
+
+    await Future.delayed(const Duration(milliseconds: 250));
+
+    if (!mounted) return;
+
+    Navigator.pushReplacementNamed(context, '/login');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,9 +36,7 @@ class SplashPage extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: GestureDetector(
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/login');
-            },
+            onTap: _openLogin,
             child: AspectRatio(
               aspectRatio: 0.53,
               child: ClipRRect(
@@ -24,24 +44,24 @@ class SplashPage extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // Background utama
+                    // BACKGROUND
                     const ColoredBox(color: Colors.white),
 
-                    // Aksen kuning kanan atas
+                    // AKSEN KUNING KANAN ATAS
                     Positioned(
                       top: -32,
                       right: -32,
                       child: _circle(155, yellow),
                     ),
 
-                    // Aksen ungu kiri bawah
+                    // AKSEN UNGU KIRI BAWAH
                     Positioned(
                       left: -55,
                       bottom: 28,
                       child: _circle(140, purple),
                     ),
 
-                    // Aksen kuning kanan bawah
+                    // AKSEN KUNING KANAN BAWAH
                     Positioned(
                       right: -20,
                       bottom: -10,
@@ -55,7 +75,7 @@ class SplashPage extends StatelessWidget {
                       ),
                     ),
 
-                    // Logo dan teks Niskala
+                    // LOGO DAN TEKS
                     Align(
                       alignment: Alignment.center,
                       child: Transform.translate(
@@ -63,7 +83,6 @@ class SplashPage extends StatelessWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Logo Niskala
                             Image.asset(
                               'assets/images/logo_niskala.png',
                               width: 200,
@@ -71,7 +90,6 @@ class SplashPage extends StatelessWidget {
                               fit: BoxFit.contain,
                             ),
 
-                            // Nama Niskala
                             Transform.translate(
                               offset: const Offset(0, -12),
                               child: Column(
@@ -106,7 +124,6 @@ class SplashPage extends StatelessWidget {
 
                                   const SizedBox(height: 16),
 
-                                  // Petunjuk masuk
                                   const Text(
                                     'Klik Disini Untuk Masuk',
                                     style: TextStyle(
@@ -118,6 +135,16 @@ class SplashPage extends StatelessWidget {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                    ),
+
+                    // EFEK GELAP TRANSPARAN
+                    IgnorePointer(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        color: Colors.black.withOpacity(
+                          _isPressed ? 0.0 : 0.13,
                         ),
                       ),
                     ),

@@ -1,13 +1,51 @@
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class DashboardGuruPage extends StatelessWidget {
+class DashboardGuruPage extends StatefulWidget {
   const DashboardGuruPage({super.key});
 
+  @override
+  State<DashboardGuruPage> createState() =>
+      _DashboardGuruPageState();
+}
+
+class _DashboardGuruPageState extends State<DashboardGuruPage> {
   static const Color purple = Color(0xFF7062F5);
   static const Color darkPurple = Color(0xFF29264F);
   static const Color yellow = Color(0xFFFFC857);
   static const Color lightPurple = Color(0xFFB8A5FF);
+
+  late Future<String> _namaGuruFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _namaGuruFuture = _ambilNamaGuru();
+  }
+
+  // ambil nama guru dari supabase
+  Future<String> _ambilNamaGuru() async {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+
+    if (user == null) {
+      return 'Guru';
+    }
+
+    try {
+      final data = await supabase
+          .from('guru')
+          .select('nama_guru')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      return data?['nama_guru'] ?? 'Guru';
+    } catch (e) {
+      debugPrint('Gagal mengambil nama guru: $e');
+      return 'Guru';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +64,6 @@ class DashboardGuruPage extends StatelessWidget {
             ),
             child: Scaffold(
               backgroundColor: Colors.white,
-
               body: Column(
                 children: [
                   Expanded(
@@ -37,38 +74,19 @@ class DashboardGuruPage extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-
-                          // HEADER
-                          Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Dashboard Guru',
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.bold,
-                                  color: darkPurple,
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.pushReplacementNamed(
-                                    context, '/login',
-                                  );
-                                },
-                                child: const Icon(
-                                  Icons.logout,
-                                  color: purple,
-                                  size: 19,
-                                ),
-                              ),
-                            ],
+                          // header
+                          const Text(
+                            'Dashboard Guru',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: darkPurple,
+                            ),
                           ),
 
                           const SizedBox(height: 18),
 
-                          // SAPAAN
+                          // sapaan guru
                           const Text(
                             'Selamat Datang,',
                             style: TextStyle(
@@ -80,13 +98,20 @@ class DashboardGuruPage extends StatelessWidget {
 
                           const SizedBox(height: 3),
 
-                          const Text(
-                            'Pak Aris!',
-                            style: TextStyle(
-                              fontSize: 21,
-                              fontWeight: FontWeight.bold,
-                              color: darkPurple,
-                            ),
+                          FutureBuilder<String>(
+                            future: _namaGuruFuture,
+                            builder: (context, snapshot) {
+                              return Text(
+                                '${snapshot.data ?? 'Guru'}!',
+                                style: const TextStyle(
+                                  fontSize: 21,
+                                  fontWeight: FontWeight.bold,
+                                  color: darkPurple,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              );
+                            },
                           ),
 
                           const SizedBox(height: 10),
@@ -103,7 +128,7 @@ class DashboardGuruPage extends StatelessWidget {
 
                           const SizedBox(height: 22),
 
-                          // STATISTIK
+                          // statistik
                           Row(
                             children: [
                               Expanded(
@@ -137,7 +162,7 @@ class DashboardGuruPage extends StatelessWidget {
 
                           const SizedBox(height: 26),
 
-                          // POTENSI TERBARU
+                          // potensi terbaru
                           const Text(
                             'Potensi Terbaru',
                             style: TextStyle(
@@ -181,7 +206,7 @@ class DashboardGuruPage extends StatelessWidget {
                     ),
                   ),
 
-                  // BOTTOM NAVBAR
+                  // bottom navbar
                   Container(
                     height: 58,
                     decoration: BoxDecoration(
@@ -209,7 +234,8 @@ class DashboardGuruPage extends StatelessWidget {
                           false,
                           () {
                             Navigator.pushNamed(
-                              context, '/data_siswa',
+                              context,
+                              '/data_siswa',
                             );
                           },
                         ),
@@ -219,7 +245,8 @@ class DashboardGuruPage extends StatelessWidget {
                           false,
                           () {
                             Navigator.pushNamed(
-                              context, '/riwayat',
+                              context,
+                              '/riwayat',
                             );
                           },
                         ),
@@ -229,7 +256,8 @@ class DashboardGuruPage extends StatelessWidget {
                           false,
                           () {
                             Navigator.pushNamed(
-                              context, '/penilaian_bakat',
+                              context,
+                              '/penilaian_bakat',
                             );
                           },
                         ),
@@ -239,7 +267,8 @@ class DashboardGuruPage extends StatelessWidget {
                           false,
                           () {
                             Navigator.pushNamed(
-                              context, '/profil_guru',
+                              context,
+                              '/profil_guru',
                             );
                           },
                         ),
@@ -255,7 +284,7 @@ class DashboardGuruPage extends StatelessWidget {
     );
   }
 
-  // STATISTIK CARD
+  // statistik card
   Widget _statCard(
     IconData icon,
     String number,
@@ -302,7 +331,7 @@ class DashboardGuruPage extends StatelessWidget {
     );
   }
 
-  // SISWA CARD
+  // siswa card
   Widget _studentCard(
     String initial,
     String name,
@@ -397,7 +426,7 @@ class DashboardGuruPage extends StatelessWidget {
     );
   }
 
-  // BOTTOM NAV ITEM
+  // bottom nav item
   Widget _navItem(
     IconData icon,
     String label,

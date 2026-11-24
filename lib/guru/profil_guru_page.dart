@@ -1,13 +1,82 @@
-
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class ProfilGuruPage extends StatelessWidget {
+class ProfilGuruPage extends StatefulWidget {
   const ProfilGuruPage({super.key});
 
+  @override
+  State<ProfilGuruPage> createState() => _ProfilGuruPageState();
+}
+
+class _ProfilGuruPageState extends State<ProfilGuruPage> {
   static const Color purple = Color(0xFF56518D);
   static const Color red = Color(0xFFFF3838);
 
-  // NAVIGASI BOTTOM BAR
+  late Future<Map<String, dynamic>?> _dataGuruFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _dataGuruFuture = _ambilDataGuru();
+  }
+
+  //ambil data guru dari supabase
+  Future<Map<String, dynamic>?> _ambilDataGuru() async {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+
+    if (user == null) {
+      return null;
+    }
+
+    try {
+      final data = await supabase
+          .from('guru')
+          .select(
+            'nama_guru, nip, nama_sekolah, foto_profil, deskripsi',
+          )
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      if (data == null) {
+        return null;
+      }
+
+      return {
+        ...data,
+        'email': user.email ?? '-',
+      };
+    } catch (e) {
+      debugPrint('Gagal mengambil data guru: $e');
+      rethrow;
+    }
+  }
+
+  //mengubah data bidang menjadi daftar
+  List<String> _ambilBidang(dynamic deskripsi) {
+    if (deskripsi == null ||
+        deskripsi.toString().trim().isEmpty) {
+      return [];
+    }
+
+    return deskripsi
+        .toString()
+        .split(',')
+        .map((item) => item.trim())
+        .where((item) => item.isNotEmpty)
+        .toList();
+  }
+
+  //menghindari data kosong
+  String _nilai(dynamic value) {
+    if (value == null || value.toString().trim().isEmpty) {
+      return '-';
+    }
+
+    return value.toString();
+  }
+
+  //navigasi bottom bar
   void _onNavTap(BuildContext context, int index) {
     switch (index) {
       case 0:
@@ -32,12 +101,11 @@ class ProfilGuruPage extends StatelessWidget {
         break;
 
       case 3:
-        // Sudah berada di halaman profil
         break;
     }
   }
 
-  // KONFIRMASI KELUAR
+  //konfirmasi keluar
   Future<void> _konfirmasiKeluar(BuildContext context) async {
     final konfirmasi = await showDialog<bool>(
       context: context,
@@ -56,15 +124,19 @@ class ProfilGuruPage extends StatelessWidget {
           'Apakah kamu yakin ingin keluar dari akun?',
           style: TextStyle(fontSize: 13),
         ),
+        actionsAlignment: MainAxisAlignment.center,
         actions: [
-          TextButton(
+          OutlinedButton(
             onPressed: () {
               Navigator.pop(dialogContext, false);
             },
-            child: const Text(
-              'Batal',
-              style: TextStyle(color: Colors.grey),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF00A878),
+              side: const BorderSide(
+                color: Color(0xFF00A878),
+              ),
             ),
+            child: const Text('Batal'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -75,25 +147,56 @@ class ProfilGuruPage extends StatelessWidget {
               foregroundColor: Colors.white,
               elevation: 0,
             ),
-            child: const Text('Ya, Keluar'),
+            child: const Text('Keluar'),
           ),
         ],
       ),
     );
 
-    if (konfirmasi == true && context.mounted) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        '/login',
-        (route) => false,
-      );
+    if (konfirmasi == true && mounted) {
+      try {
+        //keluar dari akun supabase
+        await Supabase.instance.client.auth.signOut();
+
+        if (!mounted) return;
+
+        //kembali ke halaman login
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/login',
+          (route) => false,
+        );
+      } catch (e) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal keluar: $e'),
+          ),
+        );
+      }
+    }
+  }
+
+  //memuat ulang data guru
+  Future<void> _refreshData() async {
+    setState(() {
+      _dataGuruFuture = _ambilDataGuru();
+    });
+
+    try {
+      await _dataGuruFuture;
+    } catch (_) {
+      //error ditampilkan oleh future builder
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      //background samping kiri dan kanan hitam
       backgroundColor: Colors.black,
+
       body: SafeArea(
         child: Center(
           child: Container(
@@ -105,10 +208,11 @@ class ProfilGuruPage extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(40),
             ),
+
             child: Scaffold(
               backgroundColor: Colors.white,
 
-              // HEADER
+              //header halaman
               appBar: PreferredSize(
                 preferredSize: const Size.fromHeight(55),
                 child: AppBar(
@@ -120,7 +224,9 @@ class ProfilGuruPage extends StatelessWidget {
                       color: Colors.black,
                       size: 20,
                     ),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
                   ),
                   title: const Text(
                     'Profil Guru',
@@ -134,208 +240,300 @@ class ProfilGuruPage extends StatelessWidget {
                 ),
               ),
 
-              // BODY
-              body: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // PROFIL GURU
-                    Row(
-                      children: [
-                        ClipOval(
-                          child: Image.asset(
-                            'assets/images/foto pak aris.jpg',
-                            width: 54,
-                            height: 54,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                width: 54,
-                                height: 54,
-                                color: const Color(0xFFE8E7FF),
-                                child: const Icon(
-                                  Icons.person,
-                                  size: 32,
-                                  color: Color(0xFF6C63FF),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Pak Aris',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              SizedBox(height: 3),
-                              Text(
-                                'Guru Penguji • Akademi',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 18),
-
-                    const Divider(
-                      color: Color(0xFFD0D0D0),
-                      thickness: 1,
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // BIDANG KEAHLIAN
-                    const Text(
-                      'Bidang Keahlian',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
+              //body profil guru
+              body: FutureBuilder<Map<String, dynamic>?>(
+                future: _dataGuruFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: purple,
                       ),
-                    ),
+                    );
+                  }
 
-                    const SizedBox(height: 8),
-
-                    Row(
-                      children: [
-                        _buildSkill('Coding'),
-                        const SizedBox(width: 10),
-                        _buildSkill('Seni'),
-                      ],
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // KELOLA BIDANG
-                    InkWell(
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          '/bidang-keahlian',
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        width: double.infinity,
-                        height: 38,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.grey.shade400,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Row(
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.edit_note,
-                              size: 18,
-                              color: Colors.black,
+                            const Icon(
+                              Icons.error_outline,
+                              color: Colors.red,
+                              size: 35,
                             ),
-                            SizedBox(width: 7),
-                            Expanded(
-                              child: Text(
-                                'Kelola Bidang Keahlian',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Gagal mengambil data guru.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontSize: 12),
                             ),
-                            Icon(
-                              Icons.chevron_right,
-                              size: 18,
-                              color: Colors.grey,
+                            const SizedBox(height: 10),
+                            ElevatedButton(
+                              onPressed: _refreshData,
+                              child: const Text('Coba Lagi'),
                             ),
                           ],
                         ),
                       ),
-                    ),
+                    );
+                  }
 
-                    const SizedBox(height: 10),
+                  final data = snapshot.data;
 
-                    // DATA PRIBADI
-                    const Text(
-                      'Data Pribadi',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    _buildData('NIP', '098765432123'),
-                    _buildData('Email', 'arisdigital@gmail.com'),
-                    _buildData('Alamat', 'Jl. Bandung Timur'),
-                    _buildData('No. Hp', '0890987567'),
-
-                    const SizedBox(height: 18),
-
-                    // TOMBOL KELUAR
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: SizedBox(
-                        height: 32,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            _konfirmasiKeluar(context);
-                          },
-                          icon: const Icon(
-                            Icons.logout,
-                            size: 16,
-                          ),
-                          label: const Text(
-                            'Keluar',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: red,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
+                  if (data == null) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: Text(
+                          'Data guru tidak ditemukan. '
+                          'Periksa user_id pada tabel guru.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 12),
                         ),
                       ),
-                    ),
+                    );
+                  }
 
-                    const SizedBox(height: 18),
-                  ],
-                ),
+                  //mengambil data guru dari supabase
+                  final nama = _nilai(data['nama_guru']);
+                  final nip = _nilai(data['nip']);
+                  final sekolah = _nilai(data['nama_sekolah']);
+                  final email = _nilai(data['email']);
+                  final deskripsi = data['deskripsi'];
+                  final foto = data['foto_profil']?.toString();
+
+                  //mengambil bidang keahlian dari deskripsi
+                  final bidangList = _ambilBidang(deskripsi);
+
+                  return RefreshIndicator(
+                    color: purple,
+                    onRefresh: _refreshData,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          //profil guru
+                          Row(
+                            children: [
+                              ClipOval(
+                                child: foto != null &&
+                                        foto.isNotEmpty
+                                    ? Image.network(
+                                        foto,
+                                        width: 54,
+                                        height: 54,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return _fotoDefault();
+                                        },
+                                      )
+                                    : _fotoDefault(),
+                              ),
+
+                              const SizedBox(width: 14),
+
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      nama,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 3),
+
+                                    Text(
+                                      deskripsi == null ||
+                                              deskripsi.toString().trim().isEmpty
+                                          ? 'Guru Niskala'
+                                          : deskripsi.toString(),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 18),
+
+                          const Divider(
+                            color: Color(0xFFD0D0D0),
+                            thickness: 1,
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          //bidang keahlian
+                          const Text(
+                            'Bidang Keahlian',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          if (bidangList.isEmpty)
+                            const Text(
+                              'Belum ada bidang keahlian.',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                            )
+                          else
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: bidangList.map((bidang) {
+                                return _buildSkill(bidang);
+                              }).toList(),
+                            ),
+
+                          const SizedBox(height: 12),
+
+                          //kelola bidang keahlian
+                          InkWell(
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/bidang-keahlian',
+                              );
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              width: double.infinity,
+                              height: 38,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Colors.grey.shade400,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(
+                                    Icons.edit_note,
+                                    size: 18,
+                                    color: Colors.black,
+                                  ),
+                                  SizedBox(width: 7),
+                                  Expanded(
+                                    child: Text(
+                                      'Kelola Bidang Keahlian',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.chevron_right,
+                                    size: 18,
+                                    color: Colors.grey,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          //data pribadi
+                          const Text(
+                            'Data Pribadi',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+
+                          const SizedBox(height: 10),
+
+                          _buildData('NIP', nip),
+                          _buildData('Email', email),
+                          _buildData('Sekolah', sekolah),
+
+                          const SizedBox(height: 18),
+
+                          //tombol keluar
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: SizedBox(
+                              height: 32,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  _konfirmasiKeluar(context);
+                                },
+                                icon: const Icon(
+                                  Icons.logout,
+                                  size: 16,
+                                ),
+                                label: const Text(
+                                  'Keluar',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: red,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(20),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 18),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
 
-              // BOTTOM NAVIGATION
+              //bottom navigation
               bottomNavigationBar: Container(
                 height: 60,
                 decoration: const BoxDecoration(
@@ -395,8 +593,22 @@ class ProfilGuruPage extends StatelessWidget {
     );
   }
 
-  // WIDGET LABEL BIDANG
-  static Widget _buildSkill(String title) {
+  //foto default jika belum ada foto
+  Widget _fotoDefault() {
+    return Container(
+      width: 54,
+      height: 54,
+      color: const Color(0xFFE8E7FF),
+      child: const Icon(
+        Icons.person,
+        size: 32,
+        color: Color(0xFF56518D),
+      ),
+    );
+  }
+
+  //widget bidang keahlian dari supabase
+  Widget _buildSkill(String title) {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: 13,
@@ -417,11 +629,12 @@ class ProfilGuruPage extends StatelessWidget {
     );
   }
 
-  // WIDGET DATA PRIBADI
-  static Widget _buildData(String title, String value) {
+  //widget data pribadi
+  Widget _buildData(String title, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: 70,
@@ -433,6 +646,7 @@ class ProfilGuruPage extends StatelessWidget {
               ),
             ),
           ),
+
           const Text(
             ':',
             style: TextStyle(
@@ -440,11 +654,12 @@ class ProfilGuruPage extends StatelessWidget {
               color: Colors.black,
             ),
           ),
+
           const SizedBox(width: 12),
+
           Expanded(
             child: Text(
-              value,
-              overflow: TextOverflow.ellipsis,
+              value.isEmpty ? '-' : value,
               style: const TextStyle(
                 fontSize: 10,
                 color: Colors.black,
@@ -456,7 +671,7 @@ class ProfilGuruPage extends StatelessWidget {
     );
   }
 
-  // WIDGET BOTTOM NAVIGATION
+  //widget bottom navigation
   Widget _buildNavItem(
     BuildContext context,
     IconData icon,
@@ -478,7 +693,9 @@ class ProfilGuruPage extends StatelessWidget {
               size: 21,
               color: active ? purple : Colors.grey.shade700,
             ),
+
             const SizedBox(height: 3),
+
             Text(
               title,
               textAlign: TextAlign.center,

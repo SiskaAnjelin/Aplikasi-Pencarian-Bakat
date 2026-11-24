@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class DetailJadwalScreen extends StatelessWidget {
@@ -17,7 +16,7 @@ class DetailJadwalScreen extends StatelessWidget {
           child: Container(
             width: 320,
             height: 680,
-            margin: const EdgeInsets.all(8),
+            margin: const EdgeInsets.all(16),
             clipBehavior: Clip.hardEdge,
             decoration: BoxDecoration(
               color: Colors.white,

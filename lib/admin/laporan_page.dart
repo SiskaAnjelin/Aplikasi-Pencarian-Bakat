@@ -1,340 +1,730 @@
+
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class LaporanPage extends StatefulWidget {
   final bool standalone;
-  const LaporanPage({super.key, this.standalone = false});
+
+  const LaporanPage({
+    super.key,
+    this.standalone = false,
+  });
 
   @override
   State<LaporanPage> createState() => _LaporanPageState();
 }
 
 class _LaporanPageState extends State<LaporanPage> {
-  String _periode = 'Bulan Ini';
-  String _tab = 'Bakat';
+  static const Color primaryColor = Color(0xFF6C5CFF);
+  static const Color lightPurple = Color(0xFFEDE9FF);
+  static const Color darkPurple = Color(0xFF29264F);
 
-  final List<Map<String, dynamic>> _distribusi = [
-    {'kategori': 'Seni', 'jumlah': 5, 'persen': 33},
-    {'kategori': 'Akademik', 'jumlah': 4, 'persen': 27},
-    {'kategori': 'Teknologi', 'jumlah': 3, 'persen': 20},
-    {'kategori': 'Olahraga', 'jumlah': 2, 'persen': 13},
-    {'kategori': 'Soft Skill', 'jumlah': 1, 'persen': 7},
-  ];
+  final supabase = Supabase.instance.client;
 
-  final List<Map<String, dynamic>> _rekapSiswa = [
-    {'name': 'Sinta Amalia', 'kelas': 'XI IPA 1', 'skor': 91},
-    {'name': 'Naufal Zaidan', 'kelas': 'XI IPA 1', 'skor': 85},
-    {'name': 'Alya Hayani', 'kelas': 'XI IPA 2', 'skor': 78},
-    {'name': 'Rizky Maulana', 'kelas': 'X IPS 1', 'skor': 72},
-  ];
+  int selectedTab = 0;
+  bool isDownloading = false;
 
-  void _exportLaporan() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: const Color(0xFF00B894).withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check_rounded, color: Color(0xFF00B894), size: 36),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Laporan Berhasil Diexport!',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'File laporan telah disimpan',
-              style: TextStyle(fontSize: 13, color: Color(0xFF636E72)),
-            ),
-          ],
-        ),
-        actions: [
-          Center(
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6C5CE7),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-              ),
-              child: const Text('OK'),
-            ),
-          ),
-        ],
+  late Future<List<Map<String, dynamic>>> _futureData;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureData = _ambilData(0);
+  }
+
+  //ambil data laporan dari supabase
+  Future<List<Map<String, dynamic>>> _ambilData(int index) async {
+    //ambil data peserta dari tabel siswa
+    if (index == 0) {
+      final data = await supabase
+          .from('siswa')
+          .select('nama_siswa, kelas')
+          .order('nama_siswa', ascending: true);
+
+      return List<Map<String, dynamic>>.from(data);
+    }
+
+    //ambil data guru dari tabel guru
+    if (index == 1) {
+      final data = await supabase
+          .from('guru')
+          .select('nama_guru, nip, deskripsi, nama_sekolah')
+          .order('nama_guru', ascending: true);
+
+      return List<Map<String, dynamic>>.from(data);
+    }
+
+    //ambil semua data jadwal kegiatan
+    final data = await supabase
+        .from('jadwal_kegiatan')
+        .select();
+
+    return List<Map<String, dynamic>>.from(data);
+  }
+
+  //ganti tab laporan
+  void _gantiTab(int index) {
+    if (selectedTab == index) return;
+
+    setState(() {
+      selectedTab = index;
+      _futureData = _ambilData(index);
+    });
+  }
+
+  //menghindari data kosong
+  String _nilai(dynamic value) {
+    if (value == null || value.toString().trim().isEmpty) {
+      return '-';
+    }
+
+    return value.toString();
+  }
+
+  //mengubah nama kolom menjadi judul
+  String _labelKolom(String key) {
+    const labels = {
+      'nama_siswa': 'Nama Siswa',
+      'kelas': 'Kelas',
+      'nama_guru': 'Nama Guru',
+      'nip': 'NIP',
+      'deskripsi': 'Deskripsi',
+      'nama_sekolah': 'Sekolah',
+      'nama_kegiatan': 'Nama Kegiatan',
+      'tanggal': 'Tanggal',
+      'waktu': 'Waktu',
+      'jam': 'Jam',
+      'jam_tampil': 'Jam Tampil',
+      'tempat': 'Tempat',
+      'ruangan': 'Ruangan',
+      'guru_juri': 'Guru Juri',
+      'status': 'Status',
+    };
+
+    if (labels.containsKey(key)) {
+      return labels[key]!;
+    }
+
+    return key
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((kata) {
+          if (kata.isEmpty) return kata;
+          return kata[0].toUpperCase() + kata.substring(1);
+        })
+        .join(' ');
+  }
+
+  //mengambil kolom sesuai tab
+  List<String> _ambilKeys(
+    int tab,
+    List<Map<String, dynamic>> data,
+  ) {
+    //kolom laporan peserta
+    if (tab == 0) {
+      return [
+        'nama_siswa',
+        'kelas',
+      ];
+    }
+
+    //kolom laporan guru juri
+    if (tab == 1) {
+      return [
+        'nama_guru',
+        'nip',
+        'deskripsi',
+        'nama_sekolah',
+      ];
+    }
+
+    //kolom laporan jadwal secara dinamis
+    if (data.isEmpty) return [];
+
+    return data.first.keys.where((key) {
+      final namaKolom = key.toLowerCase();
+
+      //sembunyikan id dan data sensitif
+      if (namaKolom == 'id' ||
+          namaKolom.startsWith('id_') ||
+          namaKolom == 'user_id' ||
+          namaKolom.contains('password') ||
+          namaKolom.contains('username') ||
+          namaKolom.contains('foto')) {
+        return false;
+      }
+
+      return true;
+    }).toList();
+  }
+
+  //membuat judul tabel
+  List<String> _ambilJudul(
+    int tab,
+    List<Map<String, dynamic>> data,
+  ) {
+    final keys = _ambilKeys(tab, data);
+
+    return [
+      'No',
+      ...keys.map((key) => _labelKolom(key)),
+    ];
+  }
+
+  //mengatur tampilan teks tabel
+  Widget _teksTabel(
+    String value, {
+    bool header = false,
+  }) {
+    return Text(
+      value,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontSize: header ? 9 : 8,
+        fontWeight: header ? FontWeight.bold : FontWeight.normal,
+        color: header ? Colors.white : darkPurple,
       ),
     );
+  }
+
+  //membuat header tabel
+  Widget _headerTabel(List<String> judul) {
+    return Container(
+      color: primaryColor,
+      child: Row(
+        children: judul.map((item) {
+          return SizedBox(
+            width: 110,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 10,
+                horizontal: 3,
+              ),
+              child: _teksTabel(
+                item,
+                header: true,
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  //membuat isi tabel
+  Widget _isiTabel(
+    List<Map<String, dynamic>> data,
+    List<String> keys,
+  ) {
+    return Column(
+      children: List.generate(data.length, (index) {
+        final item = data[index];
+
+        return Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.grey.shade300,
+                width: 0.5,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 110,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 9,
+                    horizontal: 3,
+                  ),
+                  child: _teksTabel('${index + 1}'),
+                ),
+              ),
+
+              ...keys.map((key) {
+                return SizedBox(
+                  width: 110,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 9,
+                      horizontal: 3,
+                    ),
+                    child: _teksTabel(_nilai(item[key])),
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
+  //menampilkan tabel sesuai tab
+  Widget _buildTable() {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _futureData,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(
+              color: primaryColor,
+              strokeWidth: 2,
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.red,
+                    size: 30,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Gagal mengambil data',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    '${snapshot.error}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 9,
+                      color: Colors.red,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _futureData = _ambilData(selectedTab);
+                      });
+                    },
+                    child: const Text('Coba Lagi'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final data = snapshot.data ?? [];
+
+        if (data.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.folder_open,
+                  color: Colors.grey,
+                  size: 40,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Belum ada data laporan.',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final keys = _ambilKeys(selectedTab, data);
+        final judul = _ambilJudul(selectedTab, data);
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _headerTabel(judul),
+                _isiTabel(data, keys),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  //membuat dan mengunduh laporan pdf
+  Future<void> _unduhLaporan() async {
+    if (isDownloading) return;
+
+    setState(() {
+      isDownloading = true;
+    });
+
+    try {
+      final tabSaatIni = selectedTab;
+      final data = await _futureData;
+
+      if (!mounted) return;
+
+      if (data.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Belum ada data untuk diunduh.'),
+          ),
+        );
+        return;
+      }
+
+      final pdf = pw.Document();
+
+      late String namaLaporan;
+      late String namaFile;
+
+      //nama laporan peserta
+      if (tabSaatIni == 0) {
+        namaLaporan = 'LAPORAN DATA PESERTA';
+        namaFile = 'laporan_peserta.pdf';
+      }
+
+      //nama laporan guru juri
+      else if (tabSaatIni == 1) {
+        namaLaporan = 'LAPORAN DATA GURU JURI';
+        namaFile = 'laporan_guru_juri.pdf';
+      }
+
+      //nama laporan jadwal
+      else {
+        namaLaporan = 'LAPORAN JADWAL KEGIATAN';
+        namaFile = 'laporan_jadwal.pdf';
+      }
+
+      final keys = _ambilKeys(tabSaatIni, data);
+
+      final judul = [
+        'No',
+        ...keys.map((key) => _labelKolom(key)),
+      ];
+
+      //menyiapkan baris data pdf
+      final List<List<String>> barisData = [];
+
+      for (int i = 0; i < data.length; i++) {
+        barisData.add([
+          '${i + 1}',
+          ...keys.map((key) => _nilai(data[i][key])),
+        ]);
+      }
+
+      final tanggalCetak = DateTime.now();
+
+      final tanggal = [
+        tanggalCetak.day.toString().padLeft(2, '0'),
+        tanggalCetak.month.toString().padLeft(2, '0'),
+        tanggalCetak.year.toString(),
+      ].join('-');
+
+      //membuat halaman pdf
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(35),
+          build: (context) {
+            return [
+              pw.Center(
+                child: pw.Text(
+                  'NISKALA',
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.deepPurple,
+                  ),
+                ),
+              ),
+
+              pw.SizedBox(height: 5),
+
+              pw.Center(
+                child: pw.Text(
+                  'Aplikasi Pencarian dan Pengembangan Bakat Siswa',
+                  style: const pw.TextStyle(
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+
+              pw.SizedBox(height: 18),
+
+              pw.Divider(
+                color: PdfColors.deepPurple,
+                thickness: 2,
+              ),
+
+              pw.SizedBox(height: 15),
+
+              pw.Center(
+                child: pw.Text(
+                  namaLaporan,
+                  style: pw.TextStyle(
+                    fontSize: 16,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+
+              pw.SizedBox(height: 20),
+
+              pw.Text(
+                'Tanggal cetak: $tanggal',
+                style: const pw.TextStyle(fontSize: 10),
+              ),
+
+              pw.Text(
+                'Jumlah data: ${data.length}',
+                style: const pw.TextStyle(fontSize: 10),
+              ),
+
+              pw.SizedBox(height: 15),
+
+              //tabel data pdf
+              pw.TableHelper.fromTextArray(
+                headers: judul,
+                data: barisData,
+                headerDecoration: const pw.BoxDecoration(
+                  color: PdfColors.deepPurple,
+                ),
+                headerStyle: pw.TextStyle(
+                  color: PdfColors.white,
+                  fontSize: 9,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+                cellStyle: const pw.TextStyle(
+                  fontSize: 9,
+                ),
+                cellAlignment: pw.Alignment.center,
+                headerAlignment: pw.Alignment.center,
+                cellPadding: const pw.EdgeInsets.all(8),
+                border: pw.TableBorder.all(
+                  color: PdfColors.grey400,
+                  width: 0.5,
+                ),
+              ),
+
+              pw.SizedBox(height: 25),
+
+              pw.Align(
+                alignment: pw.Alignment.centerRight,
+                child: pw.Text(
+                  'Laporan dibuat melalui aplikasi Niskala.',
+                  style: const pw.TextStyle(
+                    fontSize: 9,
+                  ),
+                ),
+              ),
+            ];
+          },
+        ),
+      );
+
+      //membuka pilihan cetak atau simpan pdf
+      await Printing.layoutPdf(
+        onLayout: (format) async => pdf.save(),
+        name: namaFile,
+      );
+
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal membuat laporan PDF: $e'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isDownloading = false;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FE),
-      appBar: widget.standalone
-          ? AppBar(
-              title: const Text('Laporan Data'),
-              backgroundColor: Colors.white,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF2D3436)),
-                onPressed: () => Navigator.pop(context),
-              ),
-            )
-          : null,
+      //background samping kiri dan kanan hitam
+      backgroundColor: Colors.black,
+
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!widget.standalone)
-                const Text(
-                  'Laporan Data',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF2D3436)),
-                ),
-              if (!widget.standalone) const SizedBox(height: 20),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: ['Bulan Ini', 'Semester', 'Tahun Ini'].map((p) {
-                    final selected = _periode == p;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () => setState(() => _periode = p),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: selected ? const Color(0xFF6C5CE7) : Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: selected ? const Color(0xFF6C5CE7) : const Color(0xFFE0E0E0),
-                            ),
-                          ),
-                          child: Text(
-                            p,
-                            style: TextStyle(
-                              color: selected ? Colors.white : const Color(0xFF636E72),
-                              fontWeight: FontWeight.w500,
-                              fontSize: 13,
-                            ),
-                          ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 390,
+            ),
+            child: Container(
+              //halaman laporan putih di tengah
+              width: double.infinity,
+              height: double.infinity,
+              color: Colors.white,
+
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  //header halaman
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          size: 18,
+                          color: darkPurple,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      const Text(
+                        'Laporan Data',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: darkPurple,
                         ),
                       ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  Expanded(child: _reportCard('Total Siswa', '4', const Color(0xFF6C5CE7))),
-                  const SizedBox(width: 12),
-                  Expanded(child: _reportCard('Total Bakat', '15', const Color(0xFFFDCB6E))),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Divider(
+                    color: Colors.grey.shade300,
+                    height: 1,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  //tab laporan
+                  Row(
+                    children: [
+                      _tabButton('Peserta', 0),
+                      const SizedBox(width: 5),
+                      _tabButton('Guru Juri', 1),
+                      const SizedBox(width: 5),
+                      _tabButton('Jadwal', 2),
+                    ],
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  //tabel laporan
                   Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _tab = 'Bakat'),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: _tab == 'Bakat' ? const Color(0xFF6C5CE7) : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _tab == 'Bakat' ? const Color(0xFF6C5CE7) : const Color(0xFFE0E0E0),
+                    child: _buildTable(),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  //tombol unduh laporan pdf
+                  Center(
+                    child: SizedBox(
+                      width: 150,
+                      height: 38,
+                      child: ElevatedButton.icon(
+                        onPressed: isDownloading ? null : _unduhLaporan,
+                        icon: isDownloading
+                            ? const SizedBox(
+                                width: 13,
+                                height: 13,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.download,
+                                size: 14,
+                              ),
+                        label: Text(
+                          isDownloading
+                              ? 'Memproses...'
+                              : 'Unduh Laporan',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        child: Center(
-                          child: Text(
-                            'Distribusi Bakat',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              color: _tab == 'Bakat' ? Colors.white : const Color(0xFF636E72),
-                            ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          disabledBackgroundColor: primaryColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: EdgeInsets.zero,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(9),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _tab = 'Siswa'),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: BoxDecoration(
-                          color: _tab == 'Siswa' ? const Color(0xFF6C5CE7) : Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: _tab == 'Siswa' ? const Color(0xFF6C5CE7) : const Color(0xFFE0E0E0),
-                          ),
-                        ),
-                        child: Center(
-                          child: Text(
-                            'Rekap Siswa',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              color: _tab == 'Siswa' ? Colors.white : const Color(0xFF636E72),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+
+                  const SizedBox(height: 15),
                 ],
               ),
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
-                  ],
-                ),
-                child: _tab == 'Bakat' ? _buildBakatTable() : _buildSiswaTable(),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _exportLaporan,
-                  icon: const Icon(Icons.download_rounded),
-                  label: const Text('Export Laporan'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6C5CE7),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 0,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _reportCard(String title, String value, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(value, style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: color)),
-          const SizedBox(height: 4),
-          Text(title, style: const TextStyle(fontSize: 13, color: Color(0xFF636E72))),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBakatTable() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Distribusi Bakat per Kategori', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFF6C5CE7).withOpacity(0.08),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Row(
-            children: [
-              Expanded(flex: 3, child: Text('Kategori', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-              Expanded(flex: 1, child: Text('Jumlah', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-              Expanded(flex: 1, child: Text('%', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-            ],
-          ),
-        ),
-        const SizedBox(height: 4),
-        ..._distribusi.map((e) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-            child: Row(
-              children: [
-                Expanded(flex: 3, child: Text(e['kategori'], style: const TextStyle(fontSize: 13))),
-                Expanded(
-                  flex: 1,
-                  child: Text('${e['jumlah']}', textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text('${e['persen']}%', textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: Color(0xFF6C5CE7), fontWeight: FontWeight.w600)),
-                ),
-              ],
             ),
-          );
-        }),
-      ],
+          ),
+        ),
+      ),
     );
   }
 
-  Widget _buildSiswaTable() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Rekap Skor Siswa', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+  //tampilan tombol tab
+  Widget _tabButton(String title, int index) {
+    final bool active = selectedTab == index;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _gantiTab(index),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 9),
           decoration: BoxDecoration(
-            color: const Color(0xFF6C5CE7).withOpacity(0.08),
-            borderRadius: BorderRadius.circular(8),
+            color: active ? primaryColor : lightPurple,
+            borderRadius: BorderRadius.circular(6),
           ),
-          child: const Row(
-            children: [
-              Expanded(flex: 3, child: Text('Nama', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-              Expanded(flex: 2, child: Text('Kelas', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-              Expanded(flex: 1, child: Text('Skor', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-            ],
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+              color: active ? Colors.white : darkPurple,
+            ),
           ),
         ),
-        const SizedBox(height: 4),
-        ..._rekapSiswa.map((e) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-            child: Row(
-              children: [
-                Expanded(flex: 3, child: Text(e['name'], style: const TextStyle(fontSize: 13))),
-                Expanded(flex: 2, child: Text(e['kelas'], style: const TextStyle(fontSize: 13, color: Color(0xFF636E72)))),
-                Expanded(
-                  flex: 1,
-                  child: Text('${e['skor']}', textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF6C5CE7))),
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
+      ),
     );
   }
 }

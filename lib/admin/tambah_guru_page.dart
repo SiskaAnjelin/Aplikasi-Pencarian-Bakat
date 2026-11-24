@@ -1,115 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TambahGuruPage extends StatefulWidget {
-  final Map<String, String>? guru;
-
-  const TambahGuruPage({super.key, this.guru});
+  const TambahGuruPage({super.key});
 
   @override
   State<TambahGuruPage> createState() => _TambahGuruPageState();
 }
 
 class _TambahGuruPageState extends State<TambahGuruPage> {
-  final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _nameController;
-  late final TextEditingController _nipController;
-  late final TextEditingController _bidangController;
-  late final TextEditingController _emailController;
+  final _namaController = TextEditingController();
+  final _nipController = TextEditingController();
+  String _selectedBidang = 'Guru Seni';
+  bool _isSaving = false;
 
-  bool get isEdit => widget.guru != null;
+  final supabase = Supabase.instance.client;
 
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.guru?['name'] ?? '');
-    _nipController = TextEditingController(text: widget.guru?['nip'] ?? '');
-    _bidangController = TextEditingController(text: widget.guru?['bidang'] ?? '');
-    _emailController = TextEditingController(text: widget.guru?['email'] ?? '');
-  }
+  final List<String> _bidangList = [
+    'Guru Seni',
+    'Guru RPL',
+    'Guru Musik/Vokal',
+    'Guru Teater/Drama',
+    'Guru Bahasa Indonesia',
+  ];
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _nipController.dispose();
-    _bidangController.dispose();
-    _emailController.dispose();
-    super.dispose();
-  }
+  Future<void> _saveGuru() async {
+    final nama = _namaController.text.trim();
+    if (nama.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Nama guru wajib diisi!')));
+      return;
+    }
 
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isSaving = true);
 
-    final data = {
-      'id': widget.guru?['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      'name': _nameController.text.trim(),
-      'nip': _nipController.text.trim(),
-      'bidang': _bidangController.text.trim(),
-      'email': _emailController.text.trim(),
-    };
+    try {
+      await supabase.from('guru').insert({
+        'nama_guru': nama,
+        'nip': _nipController.text.trim().isEmpty ? '-' : _nipController.text.trim(),
+        'bidang': _selectedBidang,
+      });
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: const Color(0xFF00B894).withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check_rounded, color: Color(0xFF00B894), size: 36),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              isEdit ? 'Data Guru Berhasil Diubah!' : 'Guru Berhasil Ditambahkan!',
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          Center(
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                Navigator.pop(context, data);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF6C5CE7),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-              ),
-              child: const Text('OK'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  InputDecoration _decoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFF6C5CE7), width: 1.5),
-      ),
-    );
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        setState(() => _isSaving = false);
+      }
+    }
   }
 
   @override
@@ -117,73 +54,81 @@ class _TambahGuruPageState extends State<TambahGuruPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FE),
       appBar: AppBar(
-        title: Text(isEdit ? 'Edit Data Guru' : 'Tambah Data Guru'),
+        title: const Text('Tambah Guru Juri', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Color(0xFF2D3436)),
-          onPressed: () => Navigator.pop(context),
-        ),
+        leading: IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => Navigator.pop(context)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Nama Guru *', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _nameController,
-                decoration: _decoration('Masukkan nama lengkap'),
-                validator: (v) => v == null || v.isEmpty ? 'Wajib diisi' : null,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Nama Guru *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _namaController,
+              decoration: _inputDecoration('Contoh: Pak Saiful, S.Pd'),
+            ),
+            const SizedBox(height: 16),
+
+            const Text('NIP / NUPTK', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _nipController,
+              keyboardType: TextInputType.number,
+              decoration: _inputDecoration('Contoh: 198203112005011002'),
+            ),
+            const SizedBox(height: 16),
+
+            const Text('Bidang *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey.shade300),
               ),
-              const SizedBox(height: 16),
-              const Text('NIP', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _nipController,
-                decoration: _decoration('Nomor Induk Pegawai'),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              const Text('Bidang Keahlian', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _bidangController,
-                decoration: _decoration('Contoh: Seni & Olahraga'),
-              ),
-              const SizedBox(height: 16),
-              const Text('Email', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _emailController,
-                decoration: _decoration('email@contoh.com'),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 40),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6C5CE7),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    isEdit ? 'Simpan Perubahan' : 'Tambah',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedBidang,
+                  isExpanded: true,
+                  items: _bidangList.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+                  onChanged: (v) => setState(() => _selectedBidang = v!),
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 36),
+
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                onPressed: _isSaving ? null : _saveGuru,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6C5CE7),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: _isSaving
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Simpan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+              ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
     );
   }
 }

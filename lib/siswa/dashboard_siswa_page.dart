@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DashboardSiswaPage extends StatefulWidget {
   const DashboardSiswaPage({super.key});
@@ -15,6 +15,45 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
 
   int _currentIndex = 0;
 
+  late Future<Map<String, dynamic>?> _dataSiswaFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _dataSiswaFuture = _ambilDataSiswa();
+  }
+
+  // MENGAMBIL DATA SISWA DARI SUPABASE
+  Future<Map<String, dynamic>?> _ambilDataSiswa() async {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+
+    if (user == null) {
+      debugPrint('USER BELUM LOGIN');
+      return null;
+    }
+
+    debugPrint('========== DATA LOGIN SISWA ==========');
+    debugPrint('EMAIL DASHBOARD: ${user.email}');
+    debugPrint('UID DASHBOARD: ${user.id}');
+
+    try {
+      final data = await supabase
+          .from('siswa')
+          .select('id_siswa, nama_siswa, kelas, user_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      debugPrint('DATA SISWA DASHBOARD: $data');
+      debugPrint('======================================');
+
+      return data;
+    } catch (e) {
+      debugPrint('ERROR AMBIL DATA SISWA: $e');
+      rethrow;
+    }
+  }
+
   // NAVIGASI BOTTOM BAR
   void _onNavTap(int index) {
     setState(() {
@@ -24,22 +63,19 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
     switch (index) {
       case 0:
         break;
-
       case 1:
         Navigator.pushNamed(context, '/daftar_bakat');
         break;
-
       case 2:
-        Navigator.pushNamed(context, '/detail_jadwal');
+        Navigator.pushNamed(context, '/detail_jadwal_siswa');
         break;
-
       case 3:
         Navigator.pushNamed(context, '/profil_siswa');
         break;
     }
   }
 
-  // NAVIGASI KE TAMBAH BAKAT
+  // NAVIGASI TAMBAH BAKAT
   void _keTambahBakat() {
     Navigator.pushNamed(context, '/tambah_bakat');
   }
@@ -61,8 +97,6 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
             ),
             child: Scaffold(
               backgroundColor: Colors.white,
-
-              // BODY DASHBOARD
               body: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -77,7 +111,7 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                       const Text(
                         'Dashboard Siswa',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: darkPurple,
                         ),
@@ -85,14 +119,57 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
 
                       const SizedBox(height: 18),
 
-                      // SAPAAN
-                      const Text(
-                        'Hai, Alya!',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
+                      // SAPAAN SESUAI AKUN LOGIN
+                      FutureBuilder<Map<String, dynamic>?>(
+                        future: _dataSiswaFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Text(
+                              'Memuat data...',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            );
+                          }
+
+                          if (snapshot.hasError) {
+                            return const Text(
+                              'Gagal memuat data siswa',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red,
+                              ),
+                            );
+                          }
+
+                          if (!snapshot.hasData ||
+                              snapshot.data == null) {
+                            return const Text(
+                              'Data siswa tidak ditemukan',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red,
+                              ),
+                            );
+                          }
+
+                          final nama =
+                              snapshot.data!['nama_siswa'] ?? 'Siswa';
+
+                          return Text(
+                            'Hai, $nama!',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          );
+                        },
                       ),
 
                       const SizedBox(height: 12),
@@ -102,7 +179,7 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                         'Saatnya Eksplorasi Bakatmu\n'
                         'Dan Raih Masa Depan Yang Cerah!',
                         style: TextStyle(
-                          fontSize: 9,
+                          fontSize: 11,
                           height: 1.5,
                           color: Colors.black87,
                         ),
@@ -113,8 +190,8 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                       // TOMBOL TEMUKAN BAKAT
                       Center(
                         child: SizedBox(
-                          width: 139,
-                          height: 32,
+                          width: 145,
+                          height: 34,
                           child: ElevatedButton(
                             onPressed: _keTambahBakat,
                             style: ElevatedButton.styleFrom(
@@ -123,21 +200,20 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                               elevation: 0,
                               padding: EdgeInsets.zero,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25),
+                                borderRadius:
+                                    BorderRadius.circular(25),
                               ),
                             ),
                             child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.center,
                               children: [
-                                Icon(
-                                  Icons.add,
-                                  size: 15,
-                                ),
+                                Icon(Icons.add, size: 17),
                                 SizedBox(width: 5),
                                 Text(
                                   'Temukan Bakat',
                                   style: TextStyle(
-                                    fontSize: 9,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -153,7 +229,7 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                       const Text(
                         'Bakat Saya',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.black,
                         ),
@@ -196,7 +272,6 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                 ),
               ),
 
-              // BOTTOM NAVIGATION
               bottomNavigationBar: _buildBottomNav(),
             ),
           ),
@@ -215,9 +290,9 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
   }) {
     return Container(
       width: double.infinity,
-      height: 38,
+      height: 42,
       padding: const EdgeInsets.symmetric(
-        horizontal: 7,
+        horizontal: 8,
         vertical: 4,
       ),
       decoration: BoxDecoration(
@@ -232,15 +307,15 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
         children: [
           // ICON BAKAT
           Container(
-            width: 27,
-            height: 27,
+            width: 29,
+            height: 29,
             decoration: BoxDecoration(
               color: color.withOpacity(0.15),
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
-              size: 17,
+              size: 19,
               color: color,
             ),
           ),
@@ -256,7 +331,7 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 8,
+                    fontSize: 10,
                     fontWeight: FontWeight.w600,
                     color: Colors.black,
                   ),
@@ -265,7 +340,7 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
                 Text(
                   'Kategori: $kategori',
                   style: const TextStyle(
-                    fontSize: 7,
+                    fontSize: 9,
                     color: Colors.black87,
                   ),
                 ),
@@ -275,8 +350,8 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
 
           // STATUS BAKAT
           Container(
-            width: 65,
-            height: 15,
+            width: 70,
+            height: 18,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: Colors.white,
@@ -289,7 +364,7 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
             child: Text(
               status,
               style: const TextStyle(
-                fontSize: 7,
+                fontSize: 8,
                 color: Colors.black87,
                 fontWeight: FontWeight.w500,
               ),
@@ -351,14 +426,14 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
           children: [
             Icon(
               icon,
-              size: 21,
+              size: 23,
               color: active ? purple : Colors.black87,
             ),
             const SizedBox(height: 2),
             Text(
               title,
               style: TextStyle(
-                fontSize: 8,
+                fontSize: 9,
                 color: Colors.black,
                 fontWeight: active
                     ? FontWeight.bold
