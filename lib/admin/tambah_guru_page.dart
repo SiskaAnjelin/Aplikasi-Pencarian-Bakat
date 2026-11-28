@@ -56,7 +56,7 @@ class _TambahGuruPageState extends State<TambahGuruPage> {
       _nipController.text =
           (data['nip'] ?? '').toString();
 
-      final bidang = (data['bidang'] ?? 'Guru Seni').toString();
+      final bidang = (data['deskripsi'] ?? data['bidang'] ?? 'Guru Seni').toString();
 
       if (_bidangList.contains(bidang)) {
         _selectedBidang = bidang;
@@ -95,22 +95,29 @@ class _TambahGuruPageState extends State<TambahGuruPage> {
         'nip': _nipController.text.trim().isEmpty
             ? '-'
             : _nipController.text.trim(),
-        'bidang': _selectedBidang,
+        'deskripsi': _selectedBidang,
       };
 
       if (isEdit) {
         // Mengambil ID guru untuk proses update
-        final id = widget.guruData!['id'];
+        final id = widget.guruData!['id_guru'] ?? widget.guruData!['id'];
 
         if (id == null) {
           throw Exception('ID guru tidak ditemukan.');
         }
 
         // Memperbarui data guru
-        await supabase
-            .from('guru')
-            .update(dataGuru)
-            .eq('id', id);
+        if (widget.guruData!['id_guru'] != null) {
+          await supabase
+              .from('guru')
+              .update(dataGuru)
+              .eq('id_guru', id);
+        } else {
+          await supabase
+              .from('guru')
+              .update(dataGuru)
+              .eq('id', id);
+        }
       } else {
         // Menambahkan data guru baru
         await supabase

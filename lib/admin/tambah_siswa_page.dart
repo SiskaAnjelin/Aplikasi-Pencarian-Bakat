@@ -161,9 +161,6 @@ class _TambahSiswaPageState extends State<TambahSiswaPage> {
       final payload = {
         'nama_siswa': nama,
         'kelas': _selectedKelas,
-        'jurusan': _selectedJurusan,
-        'no_hp': _noHpController.text.trim(),
-        'status_aktif': _statusAktif,
       };
 
       if (isEdit) {
