@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:pdf/pdf.dart';
@@ -18,15 +17,20 @@ class LaporanPage extends StatefulWidget {
 }
 
 class _LaporanPageState extends State<LaporanPage> {
+  // Warna utama aplikasi
   static const Color primaryColor = Color(0xFF6C5CFF);
   static const Color lightPurple = Color(0xFFEDE9FF);
   static const Color darkPurple = Color(0xFF29264F);
+  static const Color background = Color(0xFFF8F9FE);
 
+  // Koneksi Supabase
   final supabase = Supabase.instance.client;
 
+  // Pengaturan tab dan download
   int selectedTab = 0;
   bool isDownloading = false;
 
+  // Future untuk menyimpan data laporan
   late Future<List<Map<String, dynamic>>> _futureData;
 
   @override
@@ -35,9 +39,8 @@ class _LaporanPageState extends State<LaporanPage> {
     _futureData = _ambilData(0);
   }
 
-  //ambil data laporan dari supabase
+  // MENGAMBIL DATA DARI SUPABASE
   Future<List<Map<String, dynamic>>> _ambilData(int index) async {
-    //ambil data peserta dari tabel siswa
     if (index == 0) {
       final data = await supabase
           .from('siswa')
@@ -47,7 +50,6 @@ class _LaporanPageState extends State<LaporanPage> {
       return List<Map<String, dynamic>>.from(data);
     }
 
-    //ambil data guru dari tabel guru
     if (index == 1) {
       final data = await supabase
           .from('guru')
@@ -57,7 +59,6 @@ class _LaporanPageState extends State<LaporanPage> {
       return List<Map<String, dynamic>>.from(data);
     }
 
-    //ambil semua data jadwal kegiatan
     final data = await supabase
         .from('jadwal_kegiatan')
         .select();
@@ -65,7 +66,7 @@ class _LaporanPageState extends State<LaporanPage> {
     return List<Map<String, dynamic>>.from(data);
   }
 
-  //ganti tab laporan
+  // MENGGANTI TAB LAPORAN
   void _gantiTab(int index) {
     if (selectedTab == index) return;
 
@@ -75,7 +76,22 @@ class _LaporanPageState extends State<LaporanPage> {
     });
   }
 
-  //menghindari data kosong
+  // REFRESH DATA
+  Future<void> _refreshData() async {
+    final futureBaru = _ambilData(selectedTab);
+
+    setState(() {
+      _futureData = futureBaru;
+    });
+
+    try {
+      await futureBaru;
+    } catch (_) {
+      // Error ditampilkan melalui FutureBuilder.
+    }
+  }
+
+  // MENGHINDARI DATA KOSONG
   String _nilai(dynamic value) {
     if (value == null || value.toString().trim().isEmpty) {
       return '-';
@@ -84,7 +100,7 @@ class _LaporanPageState extends State<LaporanPage> {
     return value.toString();
   }
 
-  //mengubah nama kolom menjadi judul
+  // MENGUBAH NAMA KOLOM MENJADI LABEL
   String _labelKolom(String key) {
     const labels = {
       'nama_siswa': 'Nama Siswa',
@@ -118,12 +134,11 @@ class _LaporanPageState extends State<LaporanPage> {
         .join(' ');
   }
 
-  //mengambil kolom sesuai tab
+  // MENENTUKAN KOLOM SESUAI TAB
   List<String> _ambilKeys(
     int tab,
     List<Map<String, dynamic>> data,
   ) {
-    //kolom laporan peserta
     if (tab == 0) {
       return [
         'nama_siswa',
@@ -131,7 +146,6 @@ class _LaporanPageState extends State<LaporanPage> {
       ];
     }
 
-    //kolom laporan guru juri
     if (tab == 1) {
       return [
         'nama_guru',
@@ -141,13 +155,12 @@ class _LaporanPageState extends State<LaporanPage> {
       ];
     }
 
-    //kolom laporan jadwal secara dinamis
     if (data.isEmpty) return [];
 
     return data.first.keys.where((key) {
       final namaKolom = key.toLowerCase();
 
-      //sembunyikan id dan data sensitif
+      // Menyembunyikan kolom yang tidak perlu ditampilkan
       if (namaKolom == 'id' ||
           namaKolom.startsWith('id_') ||
           namaKolom == 'user_id' ||
@@ -161,7 +174,7 @@ class _LaporanPageState extends State<LaporanPage> {
     }).toList();
   }
 
-  //membuat judul tabel
+  // MENENTUKAN JUDUL TABEL
   List<String> _ambilJudul(
     int tab,
     List<Map<String, dynamic>> data,
@@ -174,7 +187,7 @@ class _LaporanPageState extends State<LaporanPage> {
     ];
   }
 
-  //mengatur tampilan teks tabel
+  // TEKS DALAM TABEL
   Widget _teksTabel(
     String value, {
     bool header = false,
@@ -183,25 +196,31 @@ class _LaporanPageState extends State<LaporanPage> {
       value,
       textAlign: TextAlign.center,
       style: TextStyle(
-        fontSize: header ? 9 : 8,
-        fontWeight: header ? FontWeight.bold : FontWeight.normal,
+        fontSize: header ? 12 : 11,
+        fontWeight: header ? FontWeight.bold : FontWeight.w500,
         color: header ? Colors.white : darkPurple,
+        height: 1.4,
       ),
     );
   }
 
-  //membuat header tabel
+  // HEADER TABEL
   Widget _headerTabel(List<String> judul) {
     return Container(
-      color: primaryColor,
+      decoration: const BoxDecoration(
+        color: primaryColor,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(8),
+        ),
+      ),
       child: Row(
         children: judul.map((item) {
           return SizedBox(
-            width: 110,
+            width: 125,
             child: Padding(
               padding: const EdgeInsets.symmetric(
-                vertical: 10,
-                horizontal: 3,
+                vertical: 13,
+                horizontal: 5,
               ),
               child: _teksTabel(
                 item,
@@ -214,7 +233,7 @@ class _LaporanPageState extends State<LaporanPage> {
     );
   }
 
-  //membuat isi tabel
+  // ISI TABEL
   Widget _isiTabel(
     List<Map<String, dynamic>> data,
     List<String> keys,
@@ -225,33 +244,38 @@ class _LaporanPageState extends State<LaporanPage> {
 
         return Container(
           decoration: BoxDecoration(
+            color: index.isEven
+                ? Colors.white
+                : const Color(0xFFF9F8FF),
             border: Border(
               bottom: BorderSide(
                 color: Colors.grey.shade300,
-                width: 0.5,
+                width: 0.7,
               ),
             ),
           ),
           child: Row(
             children: [
+              // Nomor urut
               SizedBox(
-                width: 110,
+                width: 125,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    vertical: 9,
-                    horizontal: 3,
+                    vertical: 12,
+                    horizontal: 5,
                   ),
                   child: _teksTabel('${index + 1}'),
                 ),
               ),
 
+              // Data setiap kolom
               ...keys.map((key) {
                 return SizedBox(
-                  width: 110,
+                  width: 125,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                      vertical: 9,
-                      horizontal: 3,
+                      vertical: 12,
+                      horizontal: 5,
                     ),
                     child: _teksTabel(_nilai(item[key])),
                   ),
@@ -264,56 +288,54 @@ class _LaporanPageState extends State<LaporanPage> {
     );
   }
 
-  //menampilkan tabel sesuai tab
+  // TABEL LAPORAN
   Widget _buildTable() {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: _futureData,
       builder: (context, snapshot) {
+        // Tampilan loading
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(
               color: primaryColor,
-              strokeWidth: 2,
+              strokeWidth: 3,
             ),
           );
         }
 
+        // Tampilan ketika terjadi error
         if (snapshot.hasError) {
           return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(
                     Icons.error_outline,
                     color: Colors.red,
-                    size: 30,
+                    size: 40,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   const Text(
                     'Gagal mengambil data',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 6),
                   Text(
                     '${snapshot.error}',
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontSize: 9,
+                      fontSize: 11,
                       color: Colors.red,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _futureData = _ambilData(selectedTab);
-                      });
-                    },
+                    onPressed: _refreshData,
                     child: const Text('Coba Lagi'),
                   ),
                 ],
@@ -324,6 +346,7 @@ class _LaporanPageState extends State<LaporanPage> {
 
         final data = snapshot.data ?? [];
 
+        // Tampilan ketika data kosong
         if (data.isEmpty) {
           return const Center(
             child: Column(
@@ -332,13 +355,13 @@ class _LaporanPageState extends State<LaporanPage> {
                 Icon(
                   Icons.folder_open,
                   color: Colors.grey,
-                  size: 40,
+                  size: 48,
                 ),
-                SizedBox(height: 8),
+                SizedBox(height: 10),
                 Text(
                   'Belum ada data laporan.',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 13,
                     color: Colors.grey,
                   ),
                 ),
@@ -350,6 +373,7 @@ class _LaporanPageState extends State<LaporanPage> {
         final keys = _ambilKeys(selectedTab, data);
         final judul = _ambilJudul(selectedTab, data);
 
+        // Tabel dapat digeser secara horizontal dan vertikal
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: SingleChildScrollView(
@@ -366,7 +390,7 @@ class _LaporanPageState extends State<LaporanPage> {
     );
   }
 
-  //membuat dan mengunduh laporan pdf
+  // DOWNLOAD DAN CETAK LAPORAN PDF
   Future<void> _unduhLaporan() async {
     if (isDownloading) return;
 
@@ -380,6 +404,7 @@ class _LaporanPageState extends State<LaporanPage> {
 
       if (!mounted) return;
 
+      // Memeriksa apakah data tersedia
       if (data.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -394,24 +419,19 @@ class _LaporanPageState extends State<LaporanPage> {
       late String namaLaporan;
       late String namaFile;
 
-      //nama laporan peserta
+      // Menentukan nama laporan
       if (tabSaatIni == 0) {
         namaLaporan = 'LAPORAN DATA PESERTA';
         namaFile = 'laporan_peserta.pdf';
-      }
-
-      //nama laporan guru juri
-      else if (tabSaatIni == 1) {
+      } else if (tabSaatIni == 1) {
         namaLaporan = 'LAPORAN DATA GURU JURI';
         namaFile = 'laporan_guru_juri.pdf';
-      }
-
-      //nama laporan jadwal
-      else {
+      } else {
         namaLaporan = 'LAPORAN JADWAL KEGIATAN';
         namaFile = 'laporan_jadwal.pdf';
       }
 
+      // Mengambil kolom laporan
       final keys = _ambilKeys(tabSaatIni, data);
 
       final judul = [
@@ -419,7 +439,7 @@ class _LaporanPageState extends State<LaporanPage> {
         ...keys.map((key) => _labelKolom(key)),
       ];
 
-      //menyiapkan baris data pdf
+      // Membuat isi baris PDF
       final List<List<String>> barisData = [];
 
       for (int i = 0; i < data.length; i++) {
@@ -429,6 +449,7 @@ class _LaporanPageState extends State<LaporanPage> {
         ]);
       }
 
+      // Mengambil tanggal cetak
       final tanggalCetak = DateTime.now();
 
       final tanggal = [
@@ -437,69 +458,75 @@ class _LaporanPageState extends State<LaporanPage> {
         tanggalCetak.year.toString(),
       ].join('-');
 
-      //membuat halaman pdf
+      // Membuat halaman PDF
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
           margin: const pw.EdgeInsets.all(35),
           build: (context) {
             return [
+              // Nama aplikasi
               pw.Center(
                 child: pw.Text(
                   'NISKALA',
                   style: pw.TextStyle(
-                    fontSize: 24,
+                    fontSize: 27,
                     fontWeight: pw.FontWeight.bold,
                     color: PdfColors.deepPurple,
                   ),
                 ),
               ),
 
-              pw.SizedBox(height: 5),
+              pw.SizedBox(height: 7),
 
+              // Deskripsi aplikasi
               pw.Center(
                 child: pw.Text(
                   'Aplikasi Pencarian dan Pengembangan Bakat Siswa',
                   style: const pw.TextStyle(
-                    fontSize: 10,
-                  ),
-                ),
-              ),
-
-              pw.SizedBox(height: 18),
-
-              pw.Divider(
-                color: PdfColors.deepPurple,
-                thickness: 2,
-              ),
-
-              pw.SizedBox(height: 15),
-
-              pw.Center(
-                child: pw.Text(
-                  namaLaporan,
-                  style: pw.TextStyle(
-                    fontSize: 16,
-                    fontWeight: pw.FontWeight.bold,
+                    fontSize: 11,
                   ),
                 ),
               ),
 
               pw.SizedBox(height: 20),
 
+              pw.Divider(
+                color: PdfColors.deepPurple,
+                thickness: 2,
+              ),
+
+              pw.SizedBox(height: 18),
+
+              // Judul laporan
+              pw.Center(
+                child: pw.Text(
+                  namaLaporan,
+                  style: pw.TextStyle(
+                    fontSize: 18,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
+
+              pw.SizedBox(height: 22),
+
+              // Informasi laporan
               pw.Text(
                 'Tanggal cetak: $tanggal',
-                style: const pw.TextStyle(fontSize: 10),
+                style: const pw.TextStyle(fontSize: 11),
               ),
+
+              pw.SizedBox(height: 5),
 
               pw.Text(
                 'Jumlah data: ${data.length}',
-                style: const pw.TextStyle(fontSize: 10),
+                style: const pw.TextStyle(fontSize: 11),
               ),
 
-              pw.SizedBox(height: 15),
+              pw.SizedBox(height: 18),
 
-              //tabel data pdf
+              // Tabel PDF
               pw.TableHelper.fromTextArray(
                 headers: judul,
                 data: barisData,
@@ -508,29 +535,30 @@ class _LaporanPageState extends State<LaporanPage> {
                 ),
                 headerStyle: pw.TextStyle(
                   color: PdfColors.white,
-                  fontSize: 9,
+                  fontSize: 11,
                   fontWeight: pw.FontWeight.bold,
                 ),
                 cellStyle: const pw.TextStyle(
-                  fontSize: 9,
+                  fontSize: 10,
                 ),
                 cellAlignment: pw.Alignment.center,
                 headerAlignment: pw.Alignment.center,
-                cellPadding: const pw.EdgeInsets.all(8),
+                cellPadding: const pw.EdgeInsets.all(9),
                 border: pw.TableBorder.all(
                   color: PdfColors.grey400,
                   width: 0.5,
                 ),
               ),
 
-              pw.SizedBox(height: 25),
+              pw.SizedBox(height: 28),
 
+              // Footer PDF
               pw.Align(
                 alignment: pw.Alignment.centerRight,
                 child: pw.Text(
                   'Laporan dibuat melalui aplikasi Niskala.',
                   style: const pw.TextStyle(
-                    fontSize: 9,
+                    fontSize: 10,
                   ),
                 ),
               ),
@@ -539,12 +567,11 @@ class _LaporanPageState extends State<LaporanPage> {
         ),
       );
 
-      //membuka pilihan cetak atau simpan pdf
+      // Membuka fitur cetak atau simpan PDF
       await Printing.layoutPdf(
         onLayout: (format) async => pdf.save(),
         name: namaFile,
       );
-
     } catch (e) {
       if (!mounted) return;
 
@@ -562,163 +589,240 @@ class _LaporanPageState extends State<LaporanPage> {
     }
   }
 
+  // TAMPILAN UTAMA
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //background samping kiri dan kanan hitam
-      backgroundColor: Colors.black,
+      backgroundColor: background,
 
+      // Area aman layar
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: 390,
-            ),
-            child: Container(
-              //halaman laporan putih di tengah
-              width: double.infinity,
-              height: double.infinity,
-              color: Colors.white,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Menyesuaikan padding berdasarkan lebar layar
+            final double horizontalPadding =
+                constraints.maxWidth < 400 ? 14 : 24;
 
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
+            // Membatasi lebar konten agar tetap rapi di layar besar
+            final double maxContentWidth =
+                constraints.maxWidth > 1200
+                    ? 1200
+                    : constraints.maxWidth;
 
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  //header halaman
-                  Row(
+            return Center(
+              child: SizedBox(
+                width: maxContentWidth,
+                height: constraints.maxHeight,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: 14,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      IconButton(
-                        onPressed: () {
-                          if (Navigator.canPop(context)) {
-                            Navigator.pop(context);
-                          }
-                        },
-                        icon: const Icon(
-                          Icons.arrow_back,
-                          size: 18,
-                          color: darkPurple,
-                        ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
+                      // HEADER HALAMAN
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              if (Navigator.canPop(context)) {
+                                Navigator.pop(context);
+                              }
+                            },
+                            icon: const Icon(
+                              Icons.arrow_back_rounded,
+                              size: 22,
+                              color: darkPurple,
+                            ),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 35,
+                              minHeight: 35,
+                            ),
+                          ),
 
-                      const SizedBox(width: 10),
+                          const SizedBox(width: 10),
 
-                      const Text(
-                        'Laporan Data',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: darkPurple,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Divider(
-                    color: Colors.grey.shade300,
-                    height: 1,
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  //tab laporan
-                  Row(
-                    children: [
-                      _tabButton('Peserta', 0),
-                      const SizedBox(width: 5),
-                      _tabButton('Guru Juri', 1),
-                      const SizedBox(width: 5),
-                      _tabButton('Jadwal', 2),
-                    ],
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  //tabel laporan
-                  Expanded(
-                    child: _buildTable(),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  //tombol unduh laporan pdf
-                  Center(
-                    child: SizedBox(
-                      width: 150,
-                      height: 38,
-                      child: ElevatedButton.icon(
-                        onPressed: isDownloading ? null : _unduhLaporan,
-                        icon: isDownloading
-                            ? const SizedBox(
-                                width: 13,
-                                height: 13,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.download,
-                                size: 14,
+                          const Expanded(
+                            child: Text(
+                              'Laporan Data',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: darkPurple,
                               ),
-                        label: Text(
-                          isDownloading
-                              ? 'Memproses...'
-                              : 'Unduh Laporan',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
+                            ),
                           ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      Divider(
+                        color: Colors.grey.shade300,
+                        height: 1,
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // TAB LAPORAN
+                      Row(
+                        children: [
+                          _tabButton('Peserta', 0),
+                          const SizedBox(width: 7),
+                          _tabButton('Guru Juri', 1),
+                          const SizedBox(width: 7),
+                          _tabButton('Jadwal', 2),
+                        ],
+                      ),
+
+                      const SizedBox(height: 18),
+
+                      // JUDUL BAGIAN DAN TOMBOL REFRESH
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.table_chart_rounded,
+                            color: primaryColor,
+                            size: 19,
+                          ),
+
+                          const SizedBox(width: 7),
+
+                          Expanded(
+                            child: Text(
+                              selectedTab == 0
+                                  ? 'Data Peserta'
+                                  : selectedTab == 1
+                                      ? 'Data Guru Juri'
+                                      : 'Data Jadwal Kegiatan',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: darkPurple,
+                              ),
+                            ),
+                          ),
+
+                          IconButton(
+                            onPressed: _refreshData,
+                            tooltip: 'Refresh data',
+                            icon: const Icon(
+                              Icons.refresh_rounded,
+                              color: primaryColor,
+                              size: 21,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // AREA TABEL
+                      Expanded(
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFFE8E5F5),
+                            ),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: _buildTable(),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          disabledBackgroundColor: primaryColor,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: EdgeInsets.zero,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(9),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // TOMBOL DOWNLOAD PDF
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: 280,
+                          ),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 46,
+                            child: ElevatedButton.icon(
+                              onPressed: isDownloading
+                                  ? null
+                                  : _unduhLaporan,
+                              icon: isDownloading
+                                  ? const SizedBox(
+                                      width: 17,
+                                      height: 17,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.download_rounded,
+                                      size: 19,
+                                    ),
+                              label: Text(
+                                isDownloading
+                                    ? 'Memproses...'
+                                    : 'Unduh Laporan PDF',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                disabledBackgroundColor:
+                                    primaryColor.withOpacity(0.6),
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
 
-                  const SizedBox(height: 15),
-                ],
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
   }
 
-  //tampilan tombol tab
+  // TOMBOL TAB LAPORAN
   Widget _tabButton(String title, int index) {
     final bool active = selectedTab == index;
 
     return Expanded(
       child: GestureDetector(
         onTap: () => _gantiTab(index),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 9),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(
+            vertical: 11,
+            horizontal: 4,
+          ),
           decoration: BoxDecoration(
             color: active ? primaryColor : lightPurple,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
             title,
             textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.bold,
               color: active ? Colors.white : darkPurple,
             ),

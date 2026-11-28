@@ -1,311 +1,810 @@
-
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class DetailJadwalPage extends StatelessWidget {
+class DetailJadwalPage extends StatefulWidget {
   const DetailJadwalPage({super.key});
 
-  final Color primaryColor = const Color(0xFF6C5CFF);
+  @override
+  State<DetailJadwalPage> createState() => _DetailJadwalPageState();
+}
+
+class _DetailJadwalPageState extends State<DetailJadwalPage> {
+  final supabase = Supabase.instance.client;
+
+  static const Color purple = Color(0xFF6C5CFF);
+  static const Color darkPurple = Color(0xFF29264F);
+
+  bool _isLoading = true;
+  String _role = '';
+  String _error = '';
+
+  List<Map<String, dynamic>> _jadwal = [];
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+    _fetchJadwal();
+  }
+
+  // ==========================================
+  // MENGAMBIL ROLE DAN JADWAL
+  // ==========================================
+
+  Future<void> _fetchJadwal() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+      _error = '';
+    });
+
+    try {
+      final user = supabase.auth.currentUser;
+
+      if (user == null) {
+        throw Exception('Akun belum login.');
+      }
+
+      String role = '';
+      String? idRole;
+
+      // CEK SISWA
+      final siswa = await supabase
+          .from('siswa')
+          .select('id_siswa')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      if (siswa != null) {
+        role = 'siswa';
+        idRole = siswa['id_siswa'].toString();
+      } else {
+        // CEK GURU
+        final guru = await supabase
+            .from('guru')
+            .select('id_guru')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+        if (guru != null) {
+          role = 'guru';
+          idRole = guru['id_guru'].toString();
+        } else {
+          // CEK ADMIN
+          final admin = await supabase
+              .from('admin')
+              .select('id_admin')
+              .eq('user_id', user.id)
+              .maybeSingle();
+
+          if (admin != null) {
+            role = 'admin';
+            idRole = admin['id_admin'].toString();
+          }
+        }
+      }
+
+      if (role.isEmpty || idRole == null) {
+        throw Exception('Role akun tidak ditemukan.');
+      }
+
+      List<Map<String, dynamic>> jadwalList = [];
+
+      // ADMIN: SEMUA JADWAL
+      if (role == 'admin') {
+        final response = await supabase
+            .from('jadwal_kegiatan')
+            .select()
+            .order('tanggal', ascending: true);
+
+        jadwalList = List<Map<String, dynamic>>.from(response);
+      }
+
+      // GURU: JADWAL SESUAI ID GURU LOGIN
+      else if (role == 'guru') {
+        final response = await supabase
+            .from('jadwal_kegiatan')
+            .select()
+            .eq('id_guru', idRole)
+            .order('tanggal', ascending: true);
+
+        jadwalList = List<Map<String, dynamic>>.from(response);
+      }
+
+      // SISWA: JADWAL SESUAI BAKAT DIAJUKAN
+      else if (role == 'siswa') {
+        final pengajuan = await supabase
+            .from('pengajuan_bakat')
+            .select('id_bakat')
+            .eq('id_siswa', idRole);
+
+        final List<String> idBakat = pengajuan
+            .map<String?>((item) => item['id_bakat']?.toString())
+            .whereType<String>()
+            .toSet()
+            .toList();
+
+        if (idBakat.isNotEmpty) {
+          final response = await supabase
+              .from('jadwal_kegiatan')
+              .select()
+              .inFilter('id_bakat', idBakat)
+              .order('tanggal', ascending: true);
+
+          jadwalList = List<Map<String, dynamic>>.from(response);
+        }
+      }
+
+      // AMBIL ID GURU DAN BAKAT
+      final guruIds = jadwalList
+          .map((item) => item['id_guru']?.toString())
+          .whereType<String>()
+          .toSet()
+          .toList();
+
+      final bakatIds = jadwalList
+          .map((item) => item['id_bakat']?.toString())
+          .whereType<String>()
+          .toSet()
+          .toList();
+
+      Map<String, Map<String, dynamic>> guruMap = {};
+      Map<String, Map<String, dynamic>> bakatMap = {};
+
+      // AMBIL DATA GURU
+      if (guruIds.isNotEmpty) {
+        final guruResponse = await supabase
+            .from('guru')
+            .select('id_guru, nama_guru, deskripsi')
+            .inFilter('id_guru', guruIds);
+
+        for (final item in guruResponse) {
+          guruMap[item['id_guru'].toString()] =
+              Map<String, dynamic>.from(item);
+        }
+      }
+
+      // AMBIL DATA BAKAT
+      if (bakatIds.isNotEmpty) {
+        final bakatResponse = await supabase
+            .from('bakat')
+            .select('id_bakat, nama_bakat, kategori')
+            .inFilter('id_bakat', bakatIds);
+
+        for (final item in bakatResponse) {
+          bakatMap[item['id_bakat'].toString()] =
+              Map<String, dynamic>.from(item);
+        }
+      }
+
+      // GABUNGKAN DATA
+      final hasil = jadwalList.map((item) {
+        final guruId = item['id_guru']?.toString();
+        final bakatId = item['id_bakat']?.toString();
+
+        final dataGuru = guruMap[guruId];
+        final dataBakat = bakatMap[bakatId];
+
+        return {
+          ...item,
+          'nama_guru': dataGuru?['nama_guru'] ?? '-',
+          'bidang_guru': dataGuru?['deskripsi'] ?? '-',
+          'nama_bakat': dataBakat?['nama_bakat'] ?? '-',
+          'kategori_bakat': dataBakat?['kategori'] ?? '-',
+        };
+      }).toList();
+
+      if (!mounted) return;
+
+      setState(() {
+        _role = role;
+        _jadwal = hasil;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Gagal mengambil jadwal: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+        _error = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
+
+  // ==========================================
+  // FORMAT TANGGAL
+  // ==========================================
+
+  DateTime? _parseTanggal(dynamic tanggal) {
+    if (tanggal == null) return null;
+    return DateTime.tryParse(tanggal.toString());
+  }
+
+  String _formatHari(dynamic tanggal) {
+    final date = _parseTanggal(tanggal);
+    return date?.day.toString() ?? '-';
+  }
+
+  String _formatBulanTahun(dynamic tanggal) {
+    final date = _parseTanggal(tanggal);
+    if (date == null) return '-';
+
+    const bulan = [
+      'Jan', 'Feb', 'Mar', 'Apr',
+      'Mei', 'Jun', 'Jul', 'Agu',
+      'Sep', 'Okt', 'Nov', 'Des',
+    ];
+
+    return '${bulan[date.month - 1]}\n${date.year}';
+  }
+
+  String _formatTanggal(dynamic tanggal) {
+    final date = _parseTanggal(tanggal);
+    if (date == null) return '-';
+
+    const bulan = [
+      'Januari', 'Februari', 'Maret', 'April',
+      'Mei', 'Juni', 'Juli', 'Agustus',
+      'September', 'Oktober', 'November', 'Desember',
+    ];
+
+    return '${date.day} ${bulan[date.month - 1]} ${date.year}';
+  }
+
+  // ==========================================
+  // WARNA STATUS
+  // ==========================================
+
+  Color _warnaStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'aktif':
+      case 'terdaftar':
+      case 'disetujui':
+        return const Color(0xFFD1F2D9);
+
+      case 'selesai':
+        return const Color(0xFFD3E3FD);
+
+      case 'dibatalkan':
+      case 'ditolak':
+        return const Color(0xFFFFDADA);
+
+      default:
+        return const Color(0xFFFFF0CC);
+    }
+  }
+
+  Color _warnaTeksStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'aktif':
+      case 'terdaftar':
+      case 'disetujui':
+        return const Color(0xFF1E7E34);
+
+      case 'selesai':
+        return const Color(0xFF2456A6);
+
+      case 'dibatalkan':
+      case 'ditolak':
+        return Colors.red;
+
+      default:
+        return const Color(0xFF946200);
+    }
+  }
+
+  // ==========================================
+  // KARTU JADWAL
+  // ==========================================
+
+  Widget _kartuJadwal(Map<String, dynamic> item) {
+    final namaKegiatan =
+        item['nama_kegiatan']?.toString() ?? '-';
+
+    final waktu = item['waktu']?.toString() ?? '-';
+    final tempat = item['tempat']?.toString() ?? '-';
+    final status = item['status']?.toString() ?? '-';
+
+    final guru = item['nama_guru']?.toString() ?? '-';
+    final bidang = item['bidang_guru']?.toString() ?? '-';
+
+    final bakat = item['nama_bakat']?.toString() ?? '-';
+    final kategori = item['kategori_bakat']?.toString() ?? '-';
+
+    final deskripsi =
+        item['deskripsi_kegiatan']?.toString() ?? '-';
+
     return Container(
       width: double.infinity,
-      height: double.infinity,
-      color: Colors.white,
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: 430,
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.grey.shade300,
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
-          child: Scaffold(
-            backgroundColor: Colors.white,
-            body: SafeArea(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 65,
+                height: 65,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD3CFF8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // HEADER
-                    Row(
-                      children: [
-                        IconButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(
-                            Icons.arrow_back,
-                            color: Colors.black,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'Detail Jadwal',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // KARTU JADWAL
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.grey.shade300,
-                          width: 1.2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 75,
-                            height: 75,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFD3CFF8),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Text(
-                                  '12',
-                                  style: TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w900,
-                                    color: Color(0xFF29264F),
-                                  ),
-                                ),
-                                Text(
-                                  'Sep\n2026',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF29264F),
-                                    height: 1.1,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text(
-                                  'Tari Tradisional',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.access_time,
-                                      size: 14,
-                                      color: Colors.grey,
-                                    ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      '08.00 - 09.30',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.location_on_outlined,
-                                      size: 14,
-                                      color: Colors.grey,
-                                    ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'Ruang 203',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.school_outlined,
-                                      size: 14,
-                                      color: Colors.grey,
-                                    ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'XII RPL D',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+                    Text(
+                      _formatHari(item['tanggal']),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: darkPurple,
                       ),
                     ),
-
-                    const SizedBox(height: 24),
-
-                    // GURU JURI
-                    const Text(
-                      'Guru Juri',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                    Text(
+                      _formatBulanTahun(item['tanggal']),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                        color: darkPurple,
+                        height: 1.1,
                       ),
                     ),
-                    const SizedBox(height: 12),
-
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.grey.shade300,
-                          width: 1.2,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const CircleAvatar(
-                            radius: 22,
-                            backgroundColor: Color(0xFFD3E3FD),
-                            child: Icon(
-                              Icons.person,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Bu Reza',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                'Guru Seni',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // DESKRIPSI KEGIATAN
-                    const Text(
-                      'Deskripsi Kegiatan',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.grey.shade300,
-                          width: 1.2,
-                        ),
-                      ),
-                      child: const Text(
-                        'Peserta dinilai melalui praktik tari perorangan, '
-                        'meliputi ketepatan gerak, penguasaan koreografi, '
-                        'dan ekspresi sesuai standar lomba.',
-                        style: TextStyle(
-                          fontSize: 13,
-                          height: 1.5,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // STATUS
-                    const Text(
-                      'Status',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFD1F2D9),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'Terdaftar',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E7E34),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
                   ],
                 ),
               ),
+
+              const SizedBox(width: 14),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      namaKegiatan,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+
+                    const SizedBox(height: 7),
+
+                    _infoRow(
+                      Icons.calendar_today_outlined,
+                      _formatTanggal(item['tanggal']),
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    _infoRow(Icons.access_time, waktu),
+
+                    const SizedBox(height: 4),
+
+                    _infoRow(
+                      Icons.location_on_outlined,
+                      tempat,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 15),
+          Divider(color: Colors.grey.shade200),
+          const SizedBox(height: 8),
+
+          _detailRow(
+            Icons.category_outlined,
+            'Nama Bakat',
+            bakat,
+          ),
+
+          const SizedBox(height: 10),
+
+          _detailRow(
+            Icons.interests_outlined,
+            'Kategori',
+            kategori,
+          ),
+
+          const SizedBox(height: 10),
+
+          _detailRow(
+            Icons.person_outline,
+            'Guru Juri',
+            guru,
+          ),
+
+          const SizedBox(height: 10),
+
+          _detailRow(
+            Icons.school_outlined,
+            'Bidang Guru',
+            bidang,
+          ),
+
+          const SizedBox(height: 15),
+
+          const Text(
+            'Deskripsi Kegiatan',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
           ),
+
+          const SizedBox(height: 7),
+
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(11),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF7F7FA),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              deskripsi.isEmpty ? '-' : deskripsi,
+              style: const TextStyle(
+                fontSize: 11,
+                height: 1.5,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 15),
+
+          const Text(
+            'Status',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 7,
+            ),
+            decoration: BoxDecoration(
+              color: _warnaStatus(status),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              status,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: _warnaTeksStatus(status),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // BARIS INFORMASI
+  // ==========================================
+
+  Widget _infoRow(IconData icon, String value) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 13,
+          color: Colors.grey,
+        ),
+        const SizedBox(width: 5),
+        Expanded(
+          child: Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 11,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _detailRow(
+    IconData icon,
+    String label,
+    String value,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          color: purple,
+          size: 18,
+        ),
+        const SizedBox(width: 9),
+        SizedBox(
+          width: 90,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: Colors.black54,
+            ),
+          ),
+        ),
+        const Text(
+          ': ',
+          style: TextStyle(fontSize: 11),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: darkPurple,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==========================================
+  // TAMPILAN KOSONG
+  // ==========================================
+
+  Widget _emptyState() {
+    String pesan;
+
+    if (_role == 'siswa') {
+      pesan = 'Belum ada jadwal untuk bakat yang kamu ajukan.';
+    } else if (_role == 'guru') {
+      pesan = 'Belum ada jadwal yang ditugaskan kepada kamu.';
+    } else {
+      pesan = 'Jadwal kegiatan belum tersedia.';
+    }
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 55),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.calendar_month_outlined,
+              size: 55,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Belum ada jadwal kegiatan',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: darkPurple,
+              ),
+            ),
+            const SizedBox(height: 5),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25),
+              child: Text(
+                pesan,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // BUILD HALAMAN RESPONSIF
+  // ==========================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // HEADER
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                16,
+                12,
+                16,
+                10,
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.black,
+                      size: 24,
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  const Expanded(
+                    child: Text(
+                      'Detail Jadwal',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+
+                  IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: _fetchJadwal,
+                    icon: const Icon(
+                      Icons.refresh_rounded,
+                      color: purple,
+                      size: 22,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // LABEL ROLE
+            if (_role.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  20,
+                  0,
+                  20,
+                  10,
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    _role == 'admin'
+                        ? 'Semua Jadwal'
+                        : _role == 'guru'
+                            ? 'Jadwal Penilaian Saya'
+                            : 'Jadwal Kegiatan Saya',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+
+            // ISI HALAMAN
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: purple,
+                      ),
+                    )
+                  : _error.isNotEmpty
+                      ? Center(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.error_outline,
+                                  color: Colors.red,
+                                  size: 40,
+                                ),
+
+                                const SizedBox(height: 10),
+
+                                Text(
+                                  _error,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 12),
+
+                                ElevatedButton(
+                                  onPressed: _fetchJadwal,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: purple,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: const Text('Coba Lagi'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : _jadwal.isEmpty
+                          ? RefreshIndicator(
+                              color: purple,
+                              onRefresh: _fetchJadwal,
+                              child: ListView(
+                                physics:
+                                    const AlwaysScrollableScrollPhysics(),
+                                children: [
+                                  SizedBox(
+                                    height: 430,
+                                    child: _emptyState(),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : RefreshIndicator(
+                              color: purple,
+                              onRefresh: _fetchJadwal,
+                              child: ListView.builder(
+                                physics:
+                                    const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  5,
+                                  16,
+                                  20,
+                                ),
+                                itemCount: _jadwal.length,
+                                itemBuilder: (context, index) {
+                                  return _kartuJadwal(
+                                    _jadwal[index],
+                                  );
+                                },
+                              ),
+                            ),
+            ),
+          ],
         ),
       ),
     );

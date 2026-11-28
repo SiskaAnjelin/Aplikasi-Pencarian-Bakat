@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class SplashPage extends StatefulWidget {
@@ -32,127 +31,131 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Center(
-          child: GestureDetector(
-            onTap: _openLogin,
-            child: AspectRatio(
-              aspectRatio: 0.53,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(30),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // BACKGROUND
-                    const ColoredBox(color: Colors.white),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return GestureDetector(
+              onTap: _openLogin,
+              child: SizedBox(
+                width: constraints.maxWidth,
+                height: constraints.maxHeight,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(30),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // BACKGROUND
+                      const ColoredBox(
+                        color: Colors.white,
+                      ),
 
-                    // AKSEN KUNING KANAN ATAS
-                    Positioned(
-                      top: -32,
-                      right: -32,
-                      child: _circle(155, yellow),
-                    ),
+                      // AKSEN KUNING KANAN ATAS
+                      Positioned(
+                        top: -32,
+                        right: -32,
+                        child: _circle(155, yellow),
+                      ),
 
-                    // AKSEN UNGU KIRI BAWAH
-                    Positioned(
-                      left: -55,
-                      bottom: 28,
-                      child: _circle(140, purple),
-                    ),
+                      // AKSEN UNGU KIRI BAWAH
+                      Positioned(
+                        left: -55,
+                        bottom: 28,
+                        child: _circle(140, purple),
+                      ),
 
-                    // AKSEN KUNING KANAN BAWAH
-                    Positioned(
-                      right: -20,
-                      bottom: -10,
-                      child: ClipPath(
-                        clipper: BottomWaveClipper(),
-                        child: Container(
-                          width: 160,
-                          height: 125,
-                          color: yellow,
+                      // AKSEN KUNING KANAN BAWAH
+                      Positioned(
+                        right: -20,
+                        bottom: -10,
+                        child: ClipPath(
+                          clipper: BottomWaveClipper(),
+                          child: Container(
+                            width: 160,
+                            height: 125,
+                            color: yellow,
+                          ),
                         ),
                       ),
-                    ),
 
-                    // LOGO DAN TEKS
-                    Align(
-                      alignment: Alignment.center,
-                      child: Transform.translate(
-                        offset: const Offset(0, 5),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Image.asset(
-                              'assets/images/logo_niskala.png',
-                              width: 200,
-                              height: 170,
-                              fit: BoxFit.contain,
+                      // LOGO DAN TEKS
+                      Center(
+                        child: SingleChildScrollView(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 30,
                             ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Image.asset(
+                                  'assets/images/logo_niskala.png',
+                                  width: 200,
+                                  height: 170,
+                                  fit: BoxFit.contain,
+                                ),
 
-                            Transform.translate(
-                              offset: const Offset(0, -12),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text(
-                                    'Niskala',
-                                    style: TextStyle(
-                                      fontSize: 25,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: -0.6,
-                                      color: darkPurple,
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 5),
-
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                    ),
-                                    child: Text(
-                                      'Menemukan Potensi yang Belum Terlihat',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: darkPurple,
+                                Transform.translate(
+                                  offset: const Offset(0, -12),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        'Niskala',
+                                        style: TextStyle(
+                                          fontSize: 25,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: -0.6,
+                                          color: darkPurple,
+                                        ),
                                       ),
-                                    ),
-                                  ),
 
-                                  const SizedBox(height: 16),
+                                      const SizedBox(height: 5),
 
-                                  const Text(
-                                    'Klik Disini Untuk Masuk',
-                                    style: TextStyle(
-                                      fontSize: 8,
-                                      color: Colors.grey,
-                                    ),
+                                      const Text(
+                                        'Menemukan Potensi yang Belum Terlihat',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: darkPurple,
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 16),
+
+                                      const Text(
+                                        'Klik Disini Untuk Masuk',
+                                        style: TextStyle(
+                                          fontSize: 8,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
 
-                    // EFEK GELAP TRANSPARAN
-                    IgnorePointer(
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        color: Colors.black.withOpacity(
-                          _isPressed ? 0.0 : 0.13,
+                      // EFEK GELAP TRANSPARAN
+                      IgnorePointer(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          color: Colors.black.withOpacity(
+                            _isPressed ? 0.0 : 0.13,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
@@ -178,14 +181,20 @@ class BottomWaveClipper extends CustomClipper<Path> {
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..cubicTo(
-        15, size.height * 0.55,
-        size.width * 0.45, size.height * 0.75,
-        size.width * 0.55, size.height * 0.35,
+        15,
+        size.height * 0.55,
+        size.width * 0.45,
+        size.height * 0.75,
+        size.width * 0.55,
+        size.height * 0.35,
       )
       ..cubicTo(
-        size.width * 0.65, size.height * 0.05,
-        size.width * 0.82, size.height * 0.05,
-        size.width, 0,
+        size.width * 0.65,
+        size.height * 0.05,
+        size.width * 0.82,
+        size.height * 0.05,
+        size.width,
+        0,
       )
       ..close();
   }

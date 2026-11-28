@@ -40,8 +40,7 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
       // ambil data siswa
       final siswa = await supabase
           .from('siswa')
-          .select('id_siswa, nama_siswa, kelas');
-
+          .select('id_siswa, nama_siswa, kelas, foto_profil');
       debugPrint('JUMLAH SISWA: ${siswa.length}');
 
       // ambil data bakat
@@ -81,8 +80,8 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
           ...item,
           'nama_siswa':
               dataSiswa?['nama_siswa'] ?? 'Siswa tidak ditemukan',
-          'kelas':
-              dataSiswa?['kelas'] ?? 'Kelas belum tersedia',
+          'kelas': dataSiswa?['kelas'] ?? 'Kelas belum tersedia',
+          'foto_profil': dataSiswa?['foto_profil'],
           'nama_bakat':
               dataBakat?['nama_bakat'] ?? 'Bakat tidak ditemukan',
           'kategori':
@@ -136,183 +135,181 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _phoneFrame(
-      Scaffold(
-        backgroundColor: const Color(0xFFF8F9FC),
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          toolbarHeight: 55,
-          leading: IconButton(
-            onPressed: () => Navigator.pop(context),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FC),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        toolbarHeight: 55,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: darkPurple,
+            size: 19,
+          ),
+        ),
+        title: const Text(
+          'Penilaian Bakat',
+          style: TextStyle(
+            color: darkPurple,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: _refreshData,
             icon: const Icon(
-              Icons.arrow_back_ios_new,
-              color: darkPurple,
-              size: 19,
+              Icons.refresh,
+              color: purple,
             ),
           ),
-          title: const Text(
-            'Penilaian Bakat',
-            style: TextStyle(
-              color: darkPurple,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+        ],
+      ),
+      body: Column(
+        children: [
+          // tab status pengajuan
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildTab('Semua', 0),
+                  const SizedBox(width: 7),
+                  _buildTab('Menunggu', 1),
+                  const SizedBox(width: 7),
+                  _buildTab('Dalam Proses', 2),
+                  const SizedBox(width: 7),
+                  _buildTab('Disetujui', 3),
+                ],
+              ),
             ),
           ),
-          centerTitle: true,
-          actions: [
-            IconButton(
-              onPressed: _refreshData,
-              icon: const Icon(
-                Icons.refresh,
-                color: purple,
-              ),
-            ),
-          ],
-        ),
-        body: Column(
-          children: [
-            // tab status pengajuan
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildTab('Semua', 0),
-                    const SizedBox(width: 7),
-                    _buildTab('Menunggu', 1),
-                    const SizedBox(width: 7),
-                    _buildTab('Dalam Proses', 2),
-                    const SizedBox(width: 7),
-                    _buildTab('Disetujui', 3),
-                  ],
-                ),
-              ),
-            ),
 
-            // daftar pengajuan dari supabase
-            Expanded(
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                future: _dataFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState ==
-                      ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: purple,
-                      ),
-                    );
-                  }
-
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.error_outline,
-                              color: Colors.red,
-                              size: 38,
-                            ),
-                            const SizedBox(height: 10),
-                            const Text(
-                              'Gagal mengambil data dari Supabase',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 12),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${snapshot.error}',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                color: Colors.red,
-                                fontSize: 10,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            ElevatedButton(
-                              onPressed: _refreshData,
-                              child: const Text('Coba Lagi'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-
-                  final semuaData = snapshot.data ?? [];
-                  final filteredData = _filterData(semuaData);
-
-                  if (semuaData.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'Belum ada pengajuan bakat',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 13,
-                        ),
-                      ),
-                    );
-                  }
-
-                  if (filteredData.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'Tidak ada pengajuan pada status ini',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
-                      ),
-                    );
-                  }
-
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                        ),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            '${filteredData.length} pengajuan ditemukan',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 9),
-                      Expanded(
-                        child: RefreshIndicator(
-                          color: purple,
-                          onRefresh: _refreshData,
-                          child: ListView.builder(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 4,
-                            ),
-                            itemCount: filteredData.length,
-                            itemBuilder: (context, index) {
-                              return _buildPengajuanCard(
-                                filteredData[index],
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
+          // daftar pengajuan dari supabase
+          Expanded(
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: _dataFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: purple,
+                    ),
                   );
-                },
-              ),
+                }
+
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: Colors.red,
+                            size: 38,
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            'Gagal mengambil data dari Supabase',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 12),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${snapshot.error}',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontSize: 10,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: _refreshData,
+                            child: const Text('Coba Lagi'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                final semuaData = snapshot.data ?? [];
+                final filteredData = _filterData(semuaData);
+
+                if (semuaData.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'Belum ada pengajuan bakat',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 13,
+                      ),
+                    ),
+                  );
+                }
+
+                if (filteredData.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'Tidak ada pengajuan pada status ini',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          '${filteredData.length} pengajuan ditemukan',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 9),
+                    Expanded(
+                      child: RefreshIndicator(
+                        color: purple,
+                        onRefresh: _refreshData,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 4,
+                          ),
+                          itemCount: filteredData.length,
+                          itemBuilder: (context, index) {
+                            return _buildPengajuanCard(
+                              filteredData[index],
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -393,16 +390,40 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: const Color(0xFFE8E7FF),
-            child: Text(
-              nama.isNotEmpty ? nama[0].toUpperCase() : '?',
-              style: const TextStyle(
-                color: purple,
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
+          ClipOval(
+            child: Container(
+              width: 46,
+              height: 46,
+              color: const Color(0xFFE8E7FF),
+              child: item['foto_profil'] != null &&
+                      item['foto_profil'].toString().isNotEmpty
+                  ? Image.network(
+                      item['foto_profil'].toString(),
+                      fit: BoxFit.contain,
+                      alignment: Alignment.center,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Text(
+                            nama.isNotEmpty ? nama[0].toUpperCase() : '?',
+                            style: const TextStyle(
+                              color: purple,
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : Center(
+                      child: Text(
+                        nama.isNotEmpty ? nama[0].toUpperCase() : '?',
+                        style: const TextStyle(
+                          color: purple,
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
             ),
           ),
           const SizedBox(width: 10),
@@ -462,26 +483,4 @@ class _PenilaianBakatPageState extends State<PenilaianBakatPage> {
       ),
     );
   }
-}
-
-// frame tampilan hp
-Widget _phoneFrame(Widget child) {
-  return Scaffold(
-    backgroundColor: Colors.black,
-    body: SafeArea(
-      child: Center(
-        child: Container(
-          width: 320,
-          height: 680,
-          margin: const EdgeInsets.all(16),
-          clipBehavior: Clip.hardEdge,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(38),
-          ),
-          child: child,
-        ),
-      ),
-    ),
-  );
 }

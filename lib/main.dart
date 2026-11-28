@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -50,6 +49,7 @@ class NiskalaApp extends StatelessWidget {
     return MaterialApp(
       title: 'Niskala - Aplikasi Pencarian Bakat',
       debugShowCheckedModeBanner: false,
+
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -57,72 +57,46 @@ class NiskalaApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Colors.white,
       ),
+
       home: const SplashPage(),
+
       routes: {
         '/login': (context) => const LoginPage(),
 
+        // =========================
         // SISWA
-        '/dashboard_siswa': (context) =>
-            const DashboardSiswaPage(),
+        // =========================
+        '/dashboard_siswa': (context) => const DashboardSiswaPage(),
+        '/daftar_bakat': (context) => const siswa_daftar.DaftarBakatPage(),
+        '/detail_bakat': (context) => const siswa_detail.DetailBakatPage(),
+        '/tambah_bakat': (context) => const TambahBakatPage(),
+        '/detail_jadwal_siswa': (context) => const siswa_jadwal.DetailJadwalPage(),
+        '/bakat_saya': (context) => const BakatSayaPage(),
+        '/profil_siswa': (context) => const siswa_profil.ProfilSiswaPage(),
 
-        '/daftar_bakat': (context) =>
-            const siswa_daftar.DaftarBakatPage(),
-
-        '/detail_bakat': (context) =>
-            const siswa_detail.DetailBakatPage(),
-
-        '/tambah_bakat': (context) =>
-            const TambahBakatPage(),
-
-        '/detail_jadwal_siswa': (context) =>
-            const siswa_jadwal.DetailJadwalPage(),
-
-        '/bakat_saya': (context) =>
-              const BakatSayaPage(),
-
-        '/profil_siswa': (context) =>
-            const siswa_profil.ProfilSiswaPage(),
-
+        // =========================
         // GURU
-        '/dashboard_guru': (context) =>
-            const guru.DashboardGuruPage(),
+        // =========================
+        '/dashboard_guru': (context) => const guru.DashboardGuruPage(),
+        '/data_siswa': (context) => const DataSiswaPage(),
+        '/guru_detail': (context) => const guru_detail.DetailBakatGuruPage(),
+        '/detail_bakat_guru': (context) => const guru_detail.DetailBakatGuruPage(),
+        '/penilaian_bakat': (context) => const PenilaianBakatPage(),
+        '/riwayat': (context) => const RiwayatKegiatanPage(),
+        '/riwayat_kegiatan': (context) => const RiwayatKegiatanPage(),
+        '/profil_guru': (context) => const ProfilGuruPage(),
+        '/bidang_keahlian': (context) => const BidangKeahlianPage(),
+        '/bidang-keahlian': (context) => const BidangKeahlianPage(),
 
-        '/data_siswa': (context) =>
-            const DataSiswaPage(),
-
-        '/detail_bakat_guru': (context) =>
-            const guru_detail.DetailBakatGuruPage(),
-
-        '/penilaian_bakat': (context) =>
-            const PenilaianBakatPage(),
-
-        '/riwayat_kegiatan': (context) =>
-          const RiwayatKegiatanPage(),
-
-        '/profil_guru': (context) =>
-            const ProfilGuruPage(),
-
-        '/bidang_keahlian': (context) =>
-            const BidangKeahlianPage(),
-
+        // =========================
         // ADMIN
-        '/dashboard_admin': (context) =>
-            const DashboardAdminPage(),
-
-        '/detail_jadwal': (context) =>
-            const admin_jadwal.DetailJadwalPage(),
-
-        '/kelola_siswa': (context) =>
-            const KelolaSiswaPage(standalone: true),
-
-        '/tambah_siswa': (context) =>
-            const TambahSiswaPage(),
-
-        '/kelola_guru': (context) =>
-            const KelolaGuruPage(standalone: true),
-
-        '/laporan': (context) =>
-            const LaporanPage(standalone: true),
+        // =========================
+        '/dashboard_admin': (context) => const DashboardAdminPage(),
+        '/detail_jadwal': (context) => const admin_jadwal.DetailJadwalPage(),
+        '/kelola_siswa': (context) => const KelolaSiswaPage(standalone: true),
+        '/tambah_siswa': (context) => const TambahSiswaPage(),
+        '/kelola_guru': (context) => const KelolaGuruPage(standalone: true),
+        '/laporan': (context) => const LaporanPage(standalone: true),
       },
     );
   }

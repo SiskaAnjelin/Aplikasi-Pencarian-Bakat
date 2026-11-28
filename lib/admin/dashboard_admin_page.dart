@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -6,42 +5,88 @@ class DashboardAdminPage extends StatefulWidget {
   const DashboardAdminPage({super.key});
 
   @override
-  State<DashboardAdminPage> createState() => _DashboardAdminPageState();
+  State<DashboardAdminPage> createState() =>
+      _DashboardAdminPageState();
 }
 
 class _DashboardAdminPageState extends State<DashboardAdminPage> {
-  bool _isLoggingOut = false;
-  bool _isLoading = true;
+  // ==========================================
+  // KONEKSI SUPABASE
+  // ==========================================
 
+  final supabase = Supabase.instance.client;
+
+  // ==========================================
+  // VARIABEL KONDISI
+  // ==========================================
+
+  bool _isLoading = true;
+  bool _isLoadingSiswa = true;
+  bool _isLoggingOut = false;
+
+  // Data statistik dashboard
   int _totalSiswa = 0;
   int _totalGuru = 0;
   int _totalJadwal = 0;
+  int _totalLaporan = 0;
 
-  static const Color purple = Color(0xFF6C5CE7);
-  static const Color dark = Color(0xFF2D3436);
-  static const Color background = Color(0xFFF8F9FE);
+  // Index bottom navigation
+  int _selectedIndex = 0;
 
-  final supabase = Supabase.instance.client;
+  // Bidang guru
+  String _bidangGuru = '';
+
+  // Data siswa terbaru
+  List<Map<String, dynamic>> _siswaTerbaru = [];
+
+  // ==========================================
+  // WARNA APLIKASI
+  // ==========================================
+
+  static const Color purple = Color(0xFF6C63FF);
+  static const Color darkPurple = Color(0xFF29264F);
+  static const Color yellow = Color(0xFFFFC857);
+  static const Color background = Colors.white;
+  static const Color cardGrey = Color(0xFFF0F0F2);
+  static const Color red = Color(0xFFE57373);
+
+  // ==========================================
+  // UKURAN FONT
+  // ==========================================
+
+  double fontSize(double size) => size * 1.18;
 
   @override
   void initState() {
     super.initState();
+
+    // Mengambil data ketika halaman pertama dibuka
     _fetchStats();
+    _fetchSiswaTerbaru();
   }
 
-  //ambil jumlah data dari supabase
+  // ==========================================
+  // MENGAMBIL STATISTIK
+  // ==========================================
+
   Future<void> _fetchStats() async {
     try {
-      final siswaRes = await supabase
-          .from('siswa')
-          .count(CountOption.exact);
+      // Menghitung total siswa
+      final siswaRes =
+          await supabase.from('siswa').count(CountOption.exact);
 
-      final guruRes = await supabase
-          .from('guru')
-          .count(CountOption.exact);
+      // Menghitung total guru
+      final guruRes =
+          await supabase.from('guru').count(CountOption.exact);
 
+      // Menghitung total jadwal
       final jadwalRes = await supabase
           .from('jadwal_kegiatan')
+          .count(CountOption.exact);
+
+      // Menghitung total laporan/pengajuan
+      final laporanRes = await supabase
+          .from('pengajuan_bakat')
           .count(CountOption.exact);
 
       if (!mounted) return;
@@ -50,6 +95,7 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
         _totalSiswa = siswaRes;
         _totalGuru = guruRes;
         _totalJadwal = jadwalRes;
+        _totalLaporan = laporanRes;
         _isLoading = false;
       });
     } catch (e) {
@@ -61,93 +107,179 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal mengambil ringkasan data: $e'),
+          content: Text('Gagal mengambil data: $e'),
+          backgroundColor: red,
         ),
       );
     }
   }
 
-  //konfirmasi dan proses logout
+  // ==========================================
+  // MENGAMBIL PROFIL SISWA SESUAI BIDANG GURU
+  // ==========================================
+
+  Future<void> _fetchSiswaTerbaru() async {
+    try {
+      // Mengambil user yang sedang login
+      final user = supabase.auth.currentUser;
+
+      if (user == null) {
+        throw Exception('Akun belum login.');
+      }
+
+      // Mengambil bidang guru yang login
+      final guruResponse = await supabase
+          .from('guru')
+          .select('bidang')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+      if (guruResponse == null) {
+        throw Exception('Data guru tidak ditemukan.');
+      }
+
+      final bidang = guruResponse['bidang']?.toString().trim();
+
+      if (bidang == null || bidang.isEmpty) {
+        throw Exception('Bidang guru belum diisi.');
+      }
+
+      // Mengambil siswa berdasarkan bidang bakat
+      final response = await supabase
+          .from('siswa')
+          .select('''
+            nama_siswa,
+            kelas,
+            foto_profil,
+            pengajuan_bakat!inner(
+              id_pengajuan,
+              status,
+              bakat!inner(
+                nama_bakat
+              )
+            )
+          ''')
+          .eq('pengajuan_bakat.bakat.nama_bakat', bidang)
+          .order('nama_siswa', ascending: true)
+          .limit(5);
+
+      if (!mounted) return;
+
+      setState(() {
+        _bidangGuru = bidang;
+        _siswaTerbaru =
+            List<Map<String, dynamic>>.from(response);
+        _isLoadingSiswa = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoadingSiswa = false;
+      });
+
+      debugPrint('Gagal mengambil profil siswa: $e');
+    }
+  }
+
+  // ==========================================
+  // REFRESH DASHBOARD
+  // ==========================================
+
+  Future<void> _refreshDashboard() async {
+    await Future.wait([
+      _fetchStats(),
+      _fetchSiswaTerbaru(),
+    ]);
+  }
+
+  // ==========================================
+  // NAVIGASI HALAMAN
+  // ==========================================
+
+  Future<void> _bukaHalaman(String route) async {
+    await Navigator.pushNamed(context, route);
+
+    if (!mounted) return;
+
+    // Memperbarui dashboard ketika kembali
+    await _refreshDashboard();
+  }
+
+  // ==========================================
+  // LOGOUT
+  // ==========================================
+
   Future<void> _logout() async {
-    final konfirmasi = await showDialog<bool>(
+    if (_isLoggingOut) return;
+
+    // Dialog konfirmasi keluar
+    final hasil = await showDialog<bool>(
       context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
-        title: const Center(
-          child: Text(
-            'Konfirmasi Keluar',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF29264F),
-            ),
+        title: Text(
+          'Konfirmasi Keluar',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: fontSize(14),
+            fontWeight: FontWeight.bold,
+            color: darkPurple,
           ),
         ),
-        content: const Text(
+        content: Text(
           'Apakah Anda yakin ingin keluar dari akun?',
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 13,
-            color: Colors.grey,
+            fontSize: fontSize(11),
+            color: Colors.black87,
           ),
         ),
         actionsAlignment: MainAxisAlignment.center,
         actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
         actions: [
-          // tombol batal warna hijau
           SizedBox(
-            width: 105,
-            height: 40,
+            width: 85,
+            height: 36,
             child: OutlinedButton(
-              onPressed: () {
-                Navigator.pop(dialogContext, false);
-              },
+              onPressed: () => Navigator.pop(ctx, false),
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF00A878),
-                side: const BorderSide(
-                  color: Color(0xFF00A878),
-                  width: 1.2,
-                ),
+                foregroundColor: Colors.grey,
+                side: const BorderSide(color: Colors.grey),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(9),
                 ),
               ),
-              child: const Text(
+              child: Text(
                 'Batal',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: fontSize(10)),
               ),
             ),
           ),
 
           const SizedBox(width: 8),
 
-          // tombol keluar warna merah
           SizedBox(
-            width: 105,
-            height: 40,
+            width: 85,
+            height: 36,
             child: ElevatedButton(
-              onPressed: () {
-                Navigator.pop(dialogContext, true);
-              },
+              onPressed: () => Navigator.pop(ctx, true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF4757),
+                backgroundColor: red,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(9),
                 ),
               ),
-              child: const Text(
+              child: Text(
                 'Keluar',
                 style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontSize: fontSize(10),
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
@@ -156,19 +288,19 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
       ),
     );
 
-    if (konfirmasi != true || !mounted) return;
+    if (hasil != true) return;
 
     setState(() {
       _isLoggingOut = true;
     });
 
     try {
-      //keluar dari akun supabase
+      // Mengeluarkan akun dari Supabase
       await supabase.auth.signOut();
 
       if (!mounted) return;
 
-      //kembali ke halaman login
+      // Kembali ke halaman login
       Navigator.pushNamedAndRemoveUntil(
         context,
         '/login',
@@ -183,309 +315,72 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Gagal logout: $e'),
+          content: Text('Gagal keluar: $e'),
+          backgroundColor: red,
         ),
       );
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
+  // ==========================================
+  // KARTU STATISTIK RESPONSIF
+  // ==========================================
 
-      body: SafeArea(
-        child: Center(
-          child: Container(
-            width: 320,
-            height: 680,
-            margin: const EdgeInsets.all(16),
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              color: background,
-              borderRadius: BorderRadius.circular(40),
-            ),
+  Widget _statCard({
+    required String title,
+    required String value,
+    required IconData icon,
+  }) {
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(
+        minHeight: 58,
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 8,
+      ),
+      decoration: BoxDecoration(
+        color: cardGrey,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: yellow,
+            size: 23,
+          ),
 
-            child: Scaffold(
-              backgroundColor: background,
+          const SizedBox(width: 8),
 
-              body: SafeArea(
-                child: RefreshIndicator(
-                  onRefresh: _fetchStats,
-
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
-
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-
-                        //header dashboard
-                        Row(
-                          children: [
-                            const CircleAvatar(
-                              radius: 21,
-                              backgroundColor: Color(0xFFEDE9FF),
-                              child: Icon(
-                                Icons.admin_panel_settings,
-                                color: purple,
-                                size: 25,
-                              ),
-                            ),
-
-                            const SizedBox(width: 10),
-
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Halo, Admin',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-
-                                  SizedBox(height: 2),
-
-                                  Text(
-                                    'Admin Niskala',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: dark,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            //tombol logout
-                            IconButton(
-                              onPressed:
-                                  _isLoggingOut ? null : _logout,
-                              icon: const Icon(
-                                Icons.logout_rounded,
-                                color: Colors.red,
-                                size: 21,
-                              ),
-                              tooltip: 'Keluar',
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        //ringkasan data
-                        const Text(
-                          'Ringkasan Data',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: dark,
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _statCard(
-                                'Total Siswa',
-                                _isLoading ? '...' : '$_totalSiswa',
-                                Icons.people_outline,
-                                purple,
-                              ),
-                            ),
-
-                            const SizedBox(width: 10),
-
-                            Expanded(
-                              child: _statCard(
-                                'Total Guru',
-                                _isLoading ? '...' : '$_totalGuru',
-                                Icons.school_outlined,
-                                const Color(0xFF00B894),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 10),
-
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _statCard(
-                                'Total Jadwal',
-                                _isLoading ? '...' : '$_totalJadwal',
-                                Icons.calendar_month_outlined,
-                                const Color(0xFFFDCB6E),
-                              ),
-                            ),
-
-                            const SizedBox(width: 10),
-
-                            Expanded(
-                              child: _statCard(
-                                'Laporan',
-                                '3',
-                                Icons.description_outlined,
-                                const Color(0xFFE17055),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 22),
-
-                        //menu cepat
-                        const Text(
-                          'Menu Cepat',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: dark,
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        //menu kelola siswa
-                        _menuCard(
-                          icon: Icons.people_rounded,
-                          title: 'Kelola Siswa',
-                          subtitle: 'Tambah, edit, hapus data siswa',
-                          color: purple,
-                          onTap: () async {
-                            await Navigator.pushNamed(
-                              context,
-                              '/kelola_siswa',
-                            );
-
-                            _fetchStats();
-                          },
-                        ),
-
-                        //menu kelola guru
-                        _menuCard(
-                          icon: Icons.school_rounded,
-                          title: 'Kelola Guru',
-                          subtitle: 'Kelola data guru dan bidang keahlian',
-                          color: const Color(0xFF00B894),
-                          onTap: () async {
-                            await Navigator.pushNamed(
-                              context,
-                              '/kelola_guru',
-                            );
-
-                            _fetchStats();
-                          },
-                        ),
-
-                        //menu laporan
-                        _menuCard(
-                          icon: Icons.bar_chart_rounded,
-                          title: 'Laporan Data',
-                          subtitle: 'Lihat dan export laporan',
-                          color: const Color(0xFFE17055),
-                          onTap: () async {
-                            await Navigator.pushNamed(
-                              context,
-                              '/laporan',
-                            );
-
-                            _fetchStats();
-                          },
-                        ),
-
-                        //menu jadwal kegiatan
-                        _menuCard(
-                          icon: Icons.calendar_month_rounded,
-                          title: 'Jadwal Kegiatan',
-                          subtitle: 'Kelola jadwal kegiatan siswa',
-                          color: purple,
-                          onTap: () async {
-                            await Navigator.pushNamed(
-                              context,
-                              '/detail_jadwal',
-                            );
-
-                            _fetchStats();
-                          },
-                        ),
-                      ],
-                    ),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: fontSize(8),
+                    color: Colors.black,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
-  //tampilan kartu ringkasan
-  Widget _statCard(
-    String title,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(12),
+                const SizedBox(height: 2),
 
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(9),
-            ),
-
-            child: Icon(
-              icon,
-              color: color,
-              size: 19,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 21,
-              fontWeight: FontWeight.bold,
-              color: dark,
-            ),
-          ),
-
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF636E72),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: fontSize(9),
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -493,86 +388,632 @@ class _DashboardAdminPageState extends State<DashboardAdminPage> {
     );
   }
 
-  //tampilan menu cepat
-  Widget _menuCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
+  // ==========================================
+  // FOTO PROFIL SISWA
+  // ==========================================
 
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.all(12),
-
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
+  Widget _fotoProfil(String? fotoProfil) {
+    // Foto default jika belum tersedia
+    if (fotoProfil == null || fotoProfil.trim().isEmpty) {
+      return Container(
+        width: 46,
+        height: 46,
+        decoration: const BoxDecoration(
+          color: Color(0xFFEAE8FF),
+          shape: BoxShape.circle,
         ),
+        child: const Icon(
+          Icons.person,
+          color: purple,
+          size: 25,
+        ),
+      );
+    }
 
-        child: Row(
+    // Mengambil foto dari URL
+    return ClipOval(
+      child: Image.network(
+        fotoProfil,
+        width: 46,
+        height: 46,
+        fit: BoxFit.cover,
+        alignment: const Alignment(0, -0.65),
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: 46,
+            height: 46,
+            color: const Color(0xFFEAE8FF),
+            child: const Icon(
+              Icons.person,
+              color: purple,
+              size: 25,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ==========================================
+  // PROFIL SISWA SESUAI BIDANG GURU
+  // ==========================================
+
+  Widget _bagianProfilSiswa() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Judul dan tombol lihat semua
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              width: 42,
-              height: 42,
-
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-
-              child: Icon(
-                icon,
-                color: color,
-                size: 22,
-              ),
-            ),
-
-            const SizedBox(width: 12),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color: dark,
+                    'Profil Siswa',
+                    style: TextStyle(
+                      fontSize: fontSize(11),
+                      fontWeight: FontWeight.bold,
+                      color: darkPurple,
                     ),
                   ),
 
-                  const SizedBox(height: 3),
-
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: Color(0xFF636E72),
+                  if (_bidangGuru.isNotEmpty)
+                    Text(
+                      'Bidang $_bidangGuru',
+                      style: TextStyle(
+                        fontSize: fontSize(8),
+                        color: Colors.black54,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
 
-            Icon(
-              Icons.chevron_right_rounded,
-              color: color.withOpacity(0.6),
-              size: 22,
+            TextButton(
+              onPressed: () {
+                _bukaHalaman('/kelola_siswa');
+              },
+              child: Text(
+                'Lihat Semua',
+                style: TextStyle(
+                  fontSize: fontSize(8),
+                  color: purple,
+                ),
+              ),
             ),
           ],
         ),
+
+        // Kondisi loading
+        if (_isLoadingSiswa)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(15),
+              child: CircularProgressIndicator(
+                color: purple,
+                strokeWidth: 2,
+              ),
+            ),
+          )
+
+        // Kondisi data kosong
+        else if (_siswaTerbaru.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: cardGrey,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              'Belum ada siswa pada bidang ini.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: fontSize(9),
+                color: Colors.black54,
+              ),
+            ),
+          )
+
+        // Menampilkan daftar siswa
+        else
+          ..._siswaTerbaru.map((siswa) {
+            return Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 9),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: cardGrey,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  // Foto profil
+                  _fotoProfil(
+                    siswa['foto_profil']?.toString(),
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  // Nama dan kelas siswa
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          siswa['nama_siswa']?.toString() ?? '-',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: fontSize(9),
+                            fontWeight: FontWeight.bold,
+                            color: darkPurple,
+                          ),
+                        ),
+
+                        const SizedBox(height: 3),
+
+                        Text(
+                          siswa['kelas']?.toString() ?? '-',
+                          style: TextStyle(
+                            fontSize: fontSize(8),
+                            color: Colors.black54,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.grey,
+                    size: 20,
+                  ),
+                ],
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  // ==========================================
+  // MENU UTAMA RESPONSIF
+  // ==========================================
+
+  Widget _menuCard({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(
+          minHeight: 44,
+        ),
+        margin: const EdgeInsets.only(bottom: 9),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 11,
+          vertical: 9,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: const Color(0xFF9995AD),
+            width: 0.8,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: const Color(0xFF444444),
+              size: 18,
+            ),
+
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: fontSize(9),
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 19,
+              color: Colors.black,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // BOTTOM NAVIGATION RESPONSIF
+  // ==========================================
+
+  Widget _bottomNav() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(
+            color: Color(0xFFEAEAEA),
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _navItem(
+            icon: Icons.home_outlined,
+            label: 'Beranda',
+            index: 0,
+          ),
+
+          _navItem(
+            icon: Icons.storage_outlined,
+            label: 'Data',
+            index: 1,
+          ),
+
+          _navItem(
+            icon: Icons.calendar_month_outlined,
+            label: 'Jadwal',
+            index: 2,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // ITEM BOTTOM NAVIGATION
+  // ==========================================
+
+  Widget _navItem({
+    required IconData icon,
+    required String label,
+    required int index,
+  }) {
+    final selected = _selectedIndex == index;
+
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          if (index == 0) {
+            setState(() {
+              _selectedIndex = 0;
+            });
+          } else if (index == 1) {
+            setState(() {
+              _selectedIndex = 1;
+            });
+
+            _bukaHalaman('/laporan');
+          } else if (index == 2) {
+            setState(() {
+              _selectedIndex = 2;
+            });
+
+            _bukaHalaman('/detail_jadwal');
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 21,
+                color: selected ? purple : Colors.grey,
+              ),
+
+              const SizedBox(height: 2),
+
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: fontSize(8),
+                  color: selected ? purple : Colors.grey,
+                  fontWeight: selected
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ==========================================
+  // BUILD DASHBOARD ADMIN
+  // ==========================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: background,
+
+      // Menghindari area status bar dan navigasi sistem
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Mengambil lebar layar yang tersedia
+            final lebarLayar = constraints.maxWidth;
+
+            // Padding menyesuaikan ukuran layar
+            final paddingHorizontal =
+                lebarLayar < 360 ? 14.0 : 20.0;
+
+            return Column(
+              children: [
+                // ==================================
+                // HEADER UNGU
+                // ==================================
+
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.fromLTRB(
+                    paddingHorizontal,
+                    8,
+                    paddingHorizontal,
+                    8,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: purple,
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      onPressed:
+                          _isLoggingOut ? null : _logout,
+                      tooltip: 'Keluar',
+                      icon: _isLoggingOut
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.logout_rounded,
+                              color: Colors.white,
+                              size: 25,
+                            ),
+                    ),
+                  ),
+                ),
+
+                // ==================================
+                // KONTEN DASHBOARD
+                // ==================================
+
+                Expanded(
+                  child: RefreshIndicator(
+                    color: purple,
+                    onRefresh: _refreshDashboard,
+                    child: SingleChildScrollView(
+                      physics:
+                          const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(
+                        paddingHorizontal,
+                        20,
+                        paddingHorizontal,
+                        20,
+                      ),
+                      child: Center(
+                        child: ConstrainedBox(
+                          // Membatasi pelebaran konten pada tablet,
+                          // tetapi tetap mengikuti lebar layar HP.
+                          constraints: const BoxConstraints(
+                            maxWidth: 800,
+                          ),
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.stretch,
+                            children: [
+                              // ==========================
+                              // CARD SAPAAN ADMIN
+                              // ==========================
+
+                              Container(
+                                width: double.infinity,
+                                constraints: const BoxConstraints(
+                                  minHeight: 58,
+                                ),
+                                padding:
+                                    const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 9,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEAEAEA),
+                                  borderRadius:
+                                      BorderRadius.circular(14),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Halo, Admin OSIS',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: fontSize(13),
+                                        fontWeight: FontWeight.bold,
+                                        color: darkPurple,
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 2),
+
+                                    Text(
+                                      'kelola data penampilan dengan mudah',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: fontSize(8),
+                                        color: darkPurple,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // ==========================
+                              // STATISTIK BARIS PERTAMA
+                              // ==========================
+
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _statCard(
+                                      title: 'Total Peserta',
+                                      value: _isLoading
+                                          ? '...'
+                                          : '$_totalSiswa',
+                                      icon:
+                                          Icons.workspace_premium,
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 10),
+
+                                  Expanded(
+                                    child: _statCard(
+                                      title: 'Guru Juri',
+                                      value: _isLoading
+                                          ? '...'
+                                          : '$_totalGuru',
+                                      icon: Icons
+                                          .person_add_alt_1_rounded,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              // ==========================
+                              // STATISTIK BARIS KEDUA
+                              // ==========================
+
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _statCard(
+                                      title: 'Jadwal Tampil',
+                                      value: _isLoading
+                                          ? '...'
+                                          : '$_totalJadwal',
+                                      icon: Icons
+                                          .calendar_month_rounded,
+                                    ),
+                                  ),
+
+                                  const SizedBox(width: 10),
+
+                                  Expanded(
+                                    child: _statCard(
+                                      title: 'Kelas & Jurusan',
+                                      value: _isLoading
+                                          ? '...'
+                                          : '$_totalLaporan',
+                                      icon: Icons.school_outlined,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // ==========================
+                              // PROFIL SISWA
+                              // ==========================
+
+                              _bagianProfilSiswa(),
+
+                              const SizedBox(height: 15),
+
+                              // ==========================
+                              // MENU UTAMA
+                              // ==========================
+
+                              _menuCard(
+                                icon: Icons.person,
+                                title: 'Kelola Data Siswa',
+                                onTap: () {
+                                  _bukaHalaman('/kelola_siswa');
+                                },
+                              ),
+
+                              _menuCard(
+                                icon: Icons.person_outline,
+                                title: 'Kelola Guru Juri',
+                                onTap: () {
+                                  _bukaHalaman('/kelola_guru');
+                                },
+                              ),
+
+                              _menuCard(
+                                icon:
+                                    Icons.calendar_month_outlined,
+                                title: 'Kelola Jadwal Penampilan',
+                                onTap: () {
+                                  _bukaHalaman('/detail_jadwal');
+                                },
+                              ),
+
+                              _menuCard(
+                                icon: Icons.search,
+                                title: 'Lihat Semua Data',
+                                onTap: () {
+                                  _bukaHalaman('/laporan');
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+
+      // ==================================
+      // BOTTOM NAVIGATION
+      // ==================================
+
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: _bottomNav(),
       ),
     );
   }

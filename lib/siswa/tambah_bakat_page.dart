@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -31,7 +30,6 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
   String? _selectedKategori;
   bool _isSaving = false;
 
-  // 8 KATEGORI BAKAT
   final List<String> _kategoriList = [
     'Seni',
     'Olahraga',
@@ -151,57 +149,54 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
           ),
         ),
         const SizedBox(height: 6),
-        SizedBox(
-          height: 38,
-          child: TextFormField(
-            controller: controller,
-            style: const TextStyle(fontSize: 11),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: const TextStyle(
-                fontSize: 10,
-                color: Colors.black54,
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 13,
-                vertical: 9,
-              ),
-              filled: true,
-              fillColor: Colors.white,
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(22),
-                borderSide: const BorderSide(
-                  color: Color(0xFF77718F),
-                  width: 0.8,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(22),
-                borderSide: const BorderSide(
-                  color: purple,
-                  width: 1.2,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(22),
-                borderSide: const BorderSide(
-                  color: Colors.red,
-                ),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(22),
-                borderSide: const BorderSide(
-                  color: Colors.red,
-                ),
+        TextFormField(
+          controller: controller,
+          style: const TextStyle(fontSize: 13),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(
+              fontSize: 12,
+              color: Colors.black54,
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 13,
+              vertical: 13,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(22),
+              borderSide: const BorderSide(
+                color: Color(0xFF77718F),
+                width: 0.8,
               ),
             ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Bagian ini wajib diisi';
-              }
-              return null;
-            },
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(22),
+              borderSide: const BorderSide(
+                color: purple,
+                width: 1.2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(22),
+              borderSide: const BorderSide(
+                color: Colors.red,
+              ),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(22),
+              borderSide: const BorderSide(
+                color: Colors.red,
+              ),
+            ),
           ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Bagian ini wajib diisi';
+            }
+            return null;
+          },
         ),
       ],
     );
@@ -210,27 +205,30 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.white,
       body: SafeArea(
-        child: Center(
-          child: Container(
-            width: 320,
-            height: 680,
-            margin: const EdgeInsets.all(8),
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: Scaffold(
-              backgroundColor: Colors.white,
-              body: SafeArea(
-                child: Form(
-                  key: _formKey,
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(
-                      30, 12, 30, 20,
+        child: Form(
+          key: _formKey,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Padding menyesuaikan lebar layar
+              final horizontalPadding =
+                  constraints.maxWidth > 600 ? 40.0 : 24.0;
+
+              return SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  16,
+                  horizontalPadding,
+                  24,
+                ),
+                child: Center(
+                  child: ConstrainedBox(
+                    // Membatasi lebar form pada layar besar,
+                    // tetapi tetap fleksibel pada layar kecil.
+                    constraints: const BoxConstraints(
+                      maxWidth: 600,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -246,23 +244,25 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
                               constraints: const BoxConstraints(),
                               icon: const Icon(
                                 Icons.arrow_back,
-                                size: 19,
+                                size: 22,
                                 color: Colors.black,
                               ),
                             ),
-                            const SizedBox(width: 6),
-                            const Text(
-                              'Tambah Bakat (Form)',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: darkPurple,
+                            const SizedBox(width: 10),
+                            const Expanded(
+                              child: Text(
+                                'Tambah Bakat (Form)',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: darkPurple,
+                                ),
                               ),
                             ),
                           ],
                         ),
 
-                        const SizedBox(height: 34),
+                        const SizedBox(height: 32),
 
                         // NAMA SISWA
                         _buildInput(
@@ -271,7 +271,7 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
                           controller: _namaSiswaController,
                         ),
 
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 18),
 
                         // KELAS
                         _buildInput(
@@ -280,7 +280,7 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
                           controller: _kelasController,
                         ),
 
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 18),
 
                         // NAMA BAKAT
                         _buildInput(
@@ -289,7 +289,7 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
                           controller: _namaBakatController,
                         ),
 
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 18),
 
                         // KATEGORI
                         const Text(
@@ -301,73 +301,70 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
                           ),
                         ),
 
-                        const SizedBox(height: 6),
-
-                        SizedBox(
-                          height: 40,
-                          child: DropdownButtonFormField<String>(
-                            value: _selectedKategori,
-                            isExpanded: true,
-                            icon: const Icon(
-                              Icons.keyboard_arrow_down,
-                              size: 18,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: 'Pilih kategori',
-                              hintStyle: const TextStyle(
-                                fontSize: 10,
-                                color: Colors.black54,
-                              ),
-                              contentPadding:
-                                  const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(5),
-                                borderSide: const BorderSide(
-                                  color: purple,
-                                  width: 1,
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(5),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFF77718F),
-                                  width: 0.9,
-                                ),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(5),
-                                borderSide: const BorderSide(
-                                  color: purple,
-                                  width: 1.2,
-                                ),
-                              ),
-                            ),
-                            items: _kategoriList.map((kategori) {
-                              return DropdownMenuItem<String>(
-                                value: kategori,
-                                child: Text(
-                                  kategori,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedKategori = value;
-                              });
-                            },
-                          ),
-                        ),
-
                         const SizedBox(height: 8),
 
-                        // DESKRIPSI MANUAL
+                        DropdownButtonFormField<String>(
+                          value: _selectedKategori,
+                          isExpanded: true,
+                          icon: const Icon(
+                            Icons.keyboard_arrow_down,
+                            size: 20,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Pilih kategori',
+                            hintStyle: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                            contentPadding:
+                                const EdgeInsets.symmetric(
+                              horizontal: 13,
+                              vertical: 13,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: purple,
+                                width: 1,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF77718F),
+                                width: 0.9,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: purple,
+                                width: 1.2,
+                              ),
+                            ),
+                          ),
+                          items: _kategoriList.map((kategori) {
+                            return DropdownMenuItem<String>(
+                              value: kategori,
+                              child: Text(
+                                kategori,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedKategori = value;
+                            });
+                          },
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        // DESKRIPSI
                         const Text(
                           'Deskripsi',
                           style: TextStyle(
@@ -377,23 +374,23 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
                           ),
                         ),
 
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
 
                         TextFormField(
                           controller: _deskripsiController,
-                          maxLines: 3,
+                          maxLines: 4,
                           minLines: 2,
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 13,
                           ),
                           decoration: InputDecoration(
                             hintText:
                                 'Ceritakan sedikit tentang bakatmu',
                             hintStyle: const TextStyle(
-                              fontSize: 10,
+                              fontSize: 12,
                               color: Colors.black54,
                             ),
-                            contentPadding: const EdgeInsets.all(13),
+                            contentPadding: const EdgeInsets.all(14),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(20),
                               borderSide: const BorderSide(
@@ -424,12 +421,11 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
                           },
                         ),
 
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 28),
 
                         // TOMBOL SIMPAN
                         SizedBox(
                           width: double.infinity,
-                          height: 36,
                           child: ElevatedButton(
                             onPressed:
                                 _isSaving ? null : _simpanBakat,
@@ -439,14 +435,17 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
                               disabledBackgroundColor:
                                   purple.withOpacity(0.6),
                               elevation: 0,
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(22),
                               ),
                             ),
                             child: _isSaving
                                 ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
+                                    width: 20,
+                                    height: 20,
                                     child: CircularProgressIndicator(
                                       color: Colors.white,
                                       strokeWidth: 2,
@@ -455,7 +454,7 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
                                 : const Text(
                                     'Simpan',
                                     style: TextStyle(
-                                      fontSize: 11,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -465,8 +464,8 @@ class _TambahBakatPageState extends State<TambahBakatPage> {
                     ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),

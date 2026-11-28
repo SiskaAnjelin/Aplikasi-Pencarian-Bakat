@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -46,8 +47,9 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      // 1. Login menggunakan Supabase Authentication
-      final authResponse = await supabase.auth.signInWithPassword(
+      // 1. Login Supabase Authentication
+      final authResponse =
+          await supabase.auth.signInWithPassword(
         email: email,
         password: password,
       );
@@ -104,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
         }
       }
 
-      // 5. Jika role ditemukan, masuk ke dashboard
+      // 5. Masuk dashboard sesuai role
       if (!mounted) return;
 
       if (dashboard != null) {
@@ -116,7 +118,6 @@ class _LoginPageState extends State<LoginPage> {
           (route) => false,
         );
       } else {
-        // Jika akun tidak terdaftar di tabel role
         await supabase.auth.signOut();
 
         if (!mounted) return;
@@ -152,6 +153,42 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  // HUBUNGI ADMIN VIA WHATSAPP
+  Future<void> _hubungiAdmin() async {
+    const nomorAdmin = '6282229968764';
+
+    const pesan =
+        'Halo Admin Niskala, saya ingin meminta bantuan '
+        'terkait akun aplikasi Niskala.';
+
+    final url = Uri.parse(
+      'https://wa.me/$nomorAdmin?text=${Uri.encodeComponent(pesan)}',
+    );
+
+    try {
+      final berhasil = await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!berhasil && mounted) {
+        _showMessage(
+          'Tidak dapat membuka WhatsApp.',
+          Colors.red,
+        );
+      }
+    } catch (e) {
+      debugPrint('ERROR WHATSAPP: $e');
+
+      if (mounted) {
+        _showMessage(
+          'Gagal membuka WhatsApp.',
+          Colors.red,
+        );
+      }
+    }
+  }
+
   // NOTIFIKASI
   void _showMessage(String message, Color color) {
     if (!mounted) return;
@@ -170,270 +207,281 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: Center(
-          child: Container(
-            width: 320,
-            height: 680,
-            margin: const EdgeInsets.all(16),
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: Stack(
-              children: [
-                // FORM LOGIN
-                Positioned.fill(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                    ),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return SingleChildScrollView(
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              minHeight: constraints.maxHeight,
-                            ),
-                            child: IntrinsicHeight(
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.center,
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Selamat Datang!',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w900,
-                                      color: darkPurple,
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 12),
-
-                                  Text(
-                                    'Silakan masuk dengan akun\n'
-                                    'yang telah terdaftar!',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      height: 1.5,
-                                      color: darkPurple,
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 22),
-
-                                  // EMAIL
-                                  TextField(
-                                    controller: _usernameController,
-                                    keyboardType:
-                                        TextInputType.emailAddress,
-                                    textInputAction:
-                                        TextInputAction.next,
-                                    autofillHints: const [
-                                      AutofillHints.email,
-                                    ],
-                                    decoration: InputDecoration(
-                                      hintText: 'Email',
-                                      hintStyle: const TextStyle(
-                                        fontSize: 14,
-                                      ),
-                                      prefixIcon: const Icon(
-                                        Icons.email_outlined,
-                                        size: 16,
-                                      ),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                        vertical: 10,
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(30),
-                                      ),
-                                      enabledBorder:
-                                          OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(30),
-                                        borderSide: BorderSide(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Center(
+              child: Container(
+                width: constraints.maxWidth,
+                height: constraints.maxHeight,
+                clipBehavior: Clip.hardEdge,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                child: Stack(
+                  children: [
+                    // FORM LOGIN
+                    Positioned.fill(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                        ),
+                        child: LayoutBuilder(
+                          builder: (context, innerConstraints) {
+                            return SingleChildScrollView(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: innerConstraints.maxHeight,
+                                ),
+                                child: IntrinsicHeight(
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // JUDUL
+                                      Text(
+                                        'Selamat Datang!',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w900,
                                           color: darkPurple,
-                                          width: 0.6,
                                         ),
                                       ),
-                                    ),
-                                  ),
 
-                                  const SizedBox(height: 20),
+                                      const SizedBox(height: 12),
 
-                                  // PASSWORD
-                                  TextField(
-                                    controller: _passwordController,
-                                    obscureText: _obscurePassword,
-                                    textInputAction:
-                                        TextInputAction.done,
-                                    autofillHints: const [
-                                      AutofillHints.password,
-                                    ],
-                                    onSubmitted: (_) {
-                                      if (!_isLoading) {
-                                        _handleLogin();
-                                      }
-                                    },
-                                    decoration: InputDecoration(
-                                      hintText: 'Password',
-                                      hintStyle: const TextStyle(
-                                        fontSize: 14,
-                                      ),
-                                      prefixIcon: const Icon(
-                                        Icons.lock,
-                                        size: 16,
-                                      ),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _obscurePassword
-                                              ? Icons.visibility_off
-                                              : Icons.visibility,
-                                          size: 16,
+                                      Text(
+                                        'Silakan masuk dengan akun\n'
+                                        'yang telah terdaftar!',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          height: 1.5,
+                                          color: darkPurple,
                                         ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _obscurePassword =
-                                                !_obscurePassword;
-                                          });
+                                      ),
+
+                                      const SizedBox(height: 22),
+
+                                      // EMAIL
+                                      TextField(
+                                        controller: _usernameController,
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        textInputAction:
+                                            TextInputAction.next,
+                                        autofillHints: const [
+                                          AutofillHints.email,
+                                        ],
+                                        decoration: InputDecoration(
+                                          hintText: 'Email',
+                                          hintStyle: const TextStyle(
+                                            fontSize: 14,
+                                          ),
+                                          prefixIcon: const Icon(
+                                            Icons.email_outlined,
+                                            size: 16,
+                                          ),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                            vertical: 10,
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(30),
+                                          ),
+                                          enabledBorder:
+                                              OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(30),
+                                            borderSide: BorderSide(
+                                              color: darkPurple,
+                                              width: 0.6,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 20),
+
+                                      // PASSWORD
+                                      TextField(
+                                        controller: _passwordController,
+                                        obscureText: _obscurePassword,
+                                        textInputAction:
+                                            TextInputAction.done,
+                                        autofillHints: const [
+                                          AutofillHints.password,
+                                        ],
+                                        onSubmitted: (_) {
+                                          if (!_isLoading) {
+                                            _handleLogin();
+                                          }
                                         },
-                                      ),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                        vertical: 10,
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(30),
-                                      ),
-                                      enabledBorder:
-                                          OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(30),
-                                        borderSide: BorderSide(
-                                          color: darkPurple,
-                                          width: 0.6,
+                                        decoration: InputDecoration(
+                                          hintText: 'Password',
+                                          hintStyle: const TextStyle(
+                                            fontSize: 14,
+                                          ),
+                                          prefixIcon: const Icon(
+                                            Icons.lock,
+                                            size: 16,
+                                          ),
+                                          suffixIcon: IconButton(
+                                            icon: Icon(
+                                              _obscurePassword
+                                                  ? Icons.visibility_off
+                                                  : Icons.visibility,
+                                              size: 16,
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                _obscurePassword =
+                                                    !_obscurePassword;
+                                              });
+                                            },
+                                          ),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                            vertical: 10,
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(30),
+                                          ),
+                                          enabledBorder:
+                                              OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(30),
+                                            borderSide: BorderSide(
+                                              color: darkPurple,
+                                              width: 0.6,
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ),
 
-                                  const SizedBox(height: 32),
+                                      const SizedBox(height: 32),
 
-                                  // TOMBOL LOGIN
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 38,
-                                    child: ElevatedButton(
-                                      onPressed: _isLoading
-                                          ? null
-                                          : _handleLogin,
-                                      style:
-                                          ElevatedButton.styleFrom(
-                                        backgroundColor: purple,
-                                        foregroundColor: Colors.white,
-                                        disabledBackgroundColor:
-                                            purple.withOpacity(0.6),
-                                        elevation: 0,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
+                                      // TOMBOL LOGIN
+                                      SizedBox(
+                                        width: double.infinity,
+                                        height: 38,
+                                        child: ElevatedButton(
+                                          onPressed: _isLoading
+                                              ? null
+                                              : _handleLogin,
+                                          style:
+                                              ElevatedButton.styleFrom(
+                                            backgroundColor: purple,
+                                            foregroundColor: Colors.white,
+                                            disabledBackgroundColor:
+                                                purple.withOpacity(0.6),
+                                            elevation: 0,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                          ),
+                                          child: _isLoading
+                                              ? const SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    color: Colors.white,
+                                                    strokeWidth: 2,
+                                                  ),
+                                                )
+                                              : const Text(
+                                                  'Login',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight:
+                                                        FontWeight.bold,
+                                                  ),
+                                                ),
                                         ),
                                       ),
-                                      child: _isLoading
-                                          ? const SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child:
-                                                  CircularProgressIndicator(
-                                                color: Colors.white,
-                                                strokeWidth: 2,
-                                              ),
-                                            )
-                                          : const Text(
-                                              'Login',
+
+                                      const SizedBox(height: 18),
+
+                                      // HUBUNGI ADMIN
+                                      Center(
+                                        child: Wrap(
+                                          alignment:
+                                              WrapAlignment.center,
+                                          spacing: 4,
+                                          runSpacing: 4,
+                                          children: [
+                                            Text(
+                                              'Belum punya akun atau lupa password?',
                                               style: TextStyle(
-                                                fontSize: 14,
-                                                fontWeight:
-                                                    FontWeight.bold,
+                                                color: darkPurple,
+                                                fontSize: 11,
                                               ),
                                             ),
-                                    ),
-                                  ),
 
-                                  const SizedBox(height: 18),
-
-                                  // HUBUNGI ADMIN
-                                  Center(
-                                    child: Wrap(
-                                      alignment:
-                                          WrapAlignment.center,
-                                      spacing: 4,
-                                      runSpacing: 4,
-                                      children: [
-                                        Text(
-                                          'Belum punya akun atau lupa password?',
-                                          style: TextStyle(
-                                            color: darkPurple,
-                                            fontSize: 11,
-                                          ),
+                                            GestureDetector(
+                                              onTap: _hubungiAdmin,
+                                              child: const Text(
+                                                'Hubungi Admin',
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 11,
+                                                  fontWeight:
+                                                      FontWeight.bold,
+                                                  decoration:
+                                                      TextDecoration
+                                                          .underline,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        const Text(
-                                          'Hubungi Admin',
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 11,
-                                            fontWeight:
-                                                FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                      ),
 
-                                  const SizedBox(height: 24),
-                                ],
+                                      const SizedBox(height: 24),
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        );
-                      },
+                            );
+                          },
+                        ),
+                      ),
                     ),
-                  ),
-                ),
 
-                // LINGKARAN UNGU
-                Positioned(
-                  top: 15,
-                  right: -35,
-                  child: Container(
-                    width: 85,
-                    height: 85,
-                    decoration: BoxDecoration(
-                      color: purple,
-                      shape: BoxShape.circle,
+                    // LINGKARAN UNGU
+                    Positioned(
+                      top: 15,
+                      right: -35,
+                      child: Container(
+                        width: 85,
+                        height: 85,
+                        decoration: BoxDecoration(
+                          color: purple,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
 
-                // BINTANG KUNING
-                Positioned(
-                  bottom: 115,
-                  left: 25,
-                  child: Icon(
-                    Icons.star_rounded,
-                    size: 35,
-                    color: yellow,
-                  ),
+                    // BINTANG KUNING
+                    Positioned(
+                      bottom: 115,
+                      left: 25,
+                      child: Icon(
+                        Icons.star_rounded,
+                        size: 35,
+                        color: yellow,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

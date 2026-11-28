@@ -5,13 +5,14 @@ class DashboardSiswaPage extends StatefulWidget {
   const DashboardSiswaPage({super.key});
 
   @override
-  State<DashboardSiswaPage> createState() =>
-      _DashboardSiswaPageState();
+  State<DashboardSiswaPage> createState() => _DashboardSiswaPageState();
 }
 
 class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
-  static const Color purple = Color(0xFF6C63FF);
+  static const Color purple = Color(0xFF7062F5);
   static const Color darkPurple = Color(0xFF29264F);
+  static const Color yellow = Color(0xFFFFC857);
+  static const Color lightPurple = Color(0xFFB8A5FF);
 
   int _currentIndex = 0;
 
@@ -23,19 +24,14 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
     _dataSiswaFuture = _ambilDataSiswa();
   }
 
-  // MENGAMBIL DATA SISWA DARI SUPABASE
+  // ambil data siswa & bakat asli dari supabase
   Future<Map<String, dynamic>?> _ambilDataSiswa() async {
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
 
     if (user == null) {
-      debugPrint('USER BELUM LOGIN');
       return null;
     }
-
-    debugPrint('========== DATA LOGIN SISWA ==========');
-    debugPrint('EMAIL DASHBOARD: ${user.email}');
-    debugPrint('UID DASHBOARD: ${user.id}');
 
     try {
       final data = await supabase
@@ -44,17 +40,46 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
           .eq('user_id', user.id)
           .maybeSingle();
 
-      debugPrint('DATA SISWA DASHBOARD: $data');
-      debugPrint('======================================');
+      if (data == null) return null;
 
-      return data;
+      // Ambil daftar pengajuan bakat milik siswa dari Supabase
+      final pengajuanList = await supabase
+          .from('pengajuan_bakat')
+          .select('id_pengajuan, status, rekomendasi, bakat:id_bakat(nama_bakat, kategori)')
+          .eq('id_siswa', data['id_siswa'])
+          .order('tanggal_pengajuan', ascending: false);
+
+      int totalUnggul = 0;
+      int totalPotensial = 0;
+
+      for (final item in pengajuanList) {
+        final st = (item['status'] ?? '').toString().toLowerCase();
+        final rek = (item['rekomendasi'] ?? '').toString().toLowerCase();
+        if (st.contains('unggul') || rek.contains('unggul')) {
+          totalUnggul++;
+        } else if (st.contains('potensial') ||
+            rek.contains('potensial') ||
+            st.contains('pending') ||
+            st.contains('menunggu') ||
+            st.contains('proses')) {
+          totalPotensial++;
+        }
+      }
+
+      return {
+        ...data,
+        'bakat_list': pengajuanList,
+        'total_bakat': pengajuanList.length,
+        'total_unggul': totalUnggul,
+        'total_potensial': totalPotensial,
+      };
     } catch (e) {
-      debugPrint('ERROR AMBIL DATA SISWA: $e');
+      debugPrint('Gagal mengambil data siswa: $e');
       rethrow;
     }
   }
 
-  // NAVIGASI BOTTOM BAR
+  // navigasi bottom bar
   void _onNavTap(int index) {
     setState(() {
       _currentIndex = index;
@@ -75,297 +100,395 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
     }
   }
 
-  // NAVIGASI TAMBAH BAKAT
-  void _keTambahBakat() {
-    Navigator.pushNamed(context, '/tambah_bakat');
+  // menuju halaman tambah bakat & auto refresh saat kembali
+  void _keTambahBakat() async {
+    await Navigator.pushNamed(context, '/tambah_bakat');
+    if (mounted) {
+      setState(() {
+        _dataSiswaFuture = _ambilDataSiswa();
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Center(
-          child: Container(
-            width: 320,
-            height: 680,
-            margin: const EdgeInsets.all(16),
-            clipBehavior: Clip.hardEdge,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(40),
-            ),
-            child: Scaffold(
-              backgroundColor: Colors.white,
-              body: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 22,
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(18, 22, 18, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Dashboard Siswa',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: darkPurple,
+                    ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 18),
 
-                      // JUDUL DASHBOARD
-                      const Text(
-                        'Dashboard Siswa',
-                        style: TextStyle(
-                          fontSize: 16,
+                  const SizedBox(height: 18),
+
+                  const Text(
+                    'Selamat Datang,',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
+
+                  const SizedBox(height: 3),
+
+                  FutureBuilder<Map<String, dynamic>?>(
+                    future: _dataSiswaFuture,
+                    builder: (context, snapshot) {
+                      String nama = 'Siswa';
+
+                      if (snapshot.hasData && snapshot.data != null) {
+                        nama = snapshot.data!['nama_siswa'] ?? 'Siswa';
+                      }
+
+                      if (snapshot.hasError) {
+                        nama = 'Siswa';
+                      }
+
+                      return Text(
+                        '$nama!',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 21,
                           fontWeight: FontWeight.bold,
                           color: darkPurple,
                         ),
-                      ),
+                      );
+                    },
+                  ),
 
-                      const SizedBox(height: 18),
+                  const SizedBox(height: 10),
 
-                      // SAPAAN SESUAI AKUN LOGIN
-                      FutureBuilder<Map<String, dynamic>?>(
-                        future: _dataSiswaFuture,
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Text(
-                              'Memuat data...',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            );
-                          }
+                  const Text(
+                    'Saatnya eksplorasi bakat dan\n'
+                    'kembangkan potensi terbaikmu.',
+                    style: TextStyle(
+                      fontSize: 11,
+                      height: 1.5,
+                      color: Colors.grey,
+                    ),
+                  ),
 
-                          if (snapshot.hasError) {
-                            return const Text(
-                              'Gagal memuat data siswa',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red,
-                              ),
-                            );
-                          }
+                  const SizedBox(height: 18),
 
-                          if (!snapshot.hasData ||
-                              snapshot.data == null) {
-                            return const Text(
-                              'Data siswa tidak ditemukan',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.red,
-                              ),
-                            );
-                          }
-
-                          final nama =
-                              snapshot.data!['nama_siswa'] ?? 'Siswa';
-
-                          return Text(
-                            'Hai, $nama!',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                          );
-                        },
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // DESKRIPSI
-                      const Text(
-                        'Saatnya Eksplorasi Bakatmu\n'
-                        'Dan Raih Masa Depan Yang Cerah!',
-                        style: TextStyle(
-                          fontSize: 11,
-                          height: 1.5,
-                          color: Colors.black87,
+                  // tombol tambah bakat
+                  SizedBox(
+                    width: double.infinity,
+                    height: 42,
+                    child: ElevatedButton(
+                      onPressed: _keTambahBakat,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: purple,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-
-                      const SizedBox(height: 17),
-
-                      // TOMBOL TEMUKAN BAKAT
-                      Center(
-                        child: SizedBox(
-                          width: 145,
-                          height: 34,
-                          child: ElevatedButton(
-                            onPressed: _keTambahBakat,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: purple,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: EdgeInsets.zero,
-                              shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(25),
-                              ),
-                            ),
-                            child: const Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add, size: 17),
-                                SizedBox(width: 5),
-                                Text(
-                                  'Temukan Bakat',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add, size: 19),
+                          SizedBox(width: 7),
+                          Text(
+                            'Tambah Bakat',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ),
+                        ],
                       ),
-
-                      const SizedBox(height: 28),
-
-                      // JUDUL BAKAT SAYA
-                      const Text(
-                        'Bakat Saya',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-
-                      const SizedBox(height: 23),
-
-                      // LIST BAKAT
-                      _buildBakatCard(
-                        title: 'Menggambar',
-                        kategori: 'Seni',
-                        status: 'Berkembang',
-                        icon: Icons.palette_rounded,
-                        color: const Color(0xFFFFB74D),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      _buildBakatCard(
-                        title: 'Menyanyi',
-                        kategori: 'Seni',
-                        status: 'Unggul',
-                        icon: Icons.music_note_rounded,
-                        color: const Color(0xFF9C83FF),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      _buildBakatCard(
-                        title: 'Coding',
-                        kategori: 'Teknologi',
-                        status: 'Potensial',
-                        icon: Icons.code_rounded,
-                        color: const Color(0xFF3D78D8),
-                      ),
-
-                      const Spacer(),
-                    ],
+                    ),
                   ),
-                ),
-              ),
 
-              bottomNavigationBar: _buildBottomNav(),
+                  const SizedBox(height: 22),
+
+                  // statistik & daftar bakat asli dari Supabase
+                  FutureBuilder<Map<String, dynamic>?>(
+                    future: _dataSiswaFuture,
+                    builder: (context, snapshot) {
+                      final totalBakat = snapshot.data?['total_bakat'] ?? 0;
+                      final totalUnggul = snapshot.data?['total_unggul'] ?? 0;
+                      final totalPotensial = snapshot.data?['total_potensial'] ?? 0;
+                      final List<dynamic> bakatList = snapshot.data?['bakat_list'] ?? [];
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // statistik bakat
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _statCard(
+                                  Icons.star_outline,
+                                  '$totalBakat',
+                                  'Total Bakat',
+                                  purple,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _statCard(
+                                  Icons.emoji_events_outlined,
+                                  '$totalUnggul',
+                                  'Bakat Unggul',
+                                  yellow,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: _statCard(
+                                  Icons.trending_up,
+                                  '$totalPotensial',
+                                  'Potensial',
+                                  lightPurple,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 26),
+
+                          // judul bakat saya
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Bakat Saya',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: darkPurple,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.pushNamed(context, '/bakat_saya');
+                                },
+                                child: const Text(
+                                  'Lihat Semua',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: purple,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          if (snapshot.connectionState == ConnectionState.waiting)
+                            const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(20),
+                                child: CircularProgressIndicator(color: purple),
+                              ),
+                            )
+                          else if (bakatList.isEmpty)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8F9FC),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: const Text(
+                                'Belum ada bakat diajukan.\nKlik tombol "Tambah Bakat" di atas.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 11, color: Colors.grey),
+                              ),
+                            )
+                          else
+                            ...bakatList.take(3).map((item) {
+                              final bakat = item['bakat'] as Map<String, dynamic>? ?? {};
+                              final nama = bakat['nama_bakat']?.toString() ?? 'Bakat';
+                              final kategori = bakat['kategori']?.toString() ?? 'Umum';
+                              final status = item['status']?.toString() ?? 'Menunggu';
+
+                              IconData iconBakat = Icons.star_rounded;
+                              Color warnaBakat = purple;
+                              if (kategori.toLowerCase().contains('seni')) {
+                                iconBakat = Icons.palette_rounded;
+                                warnaBakat = const Color(0xFFFFB74D);
+                              } else if (kategori.toLowerCase().contains('teknologi')) {
+                                iconBakat = Icons.code_rounded;
+                                warnaBakat = const Color(0xFF3D78D8);
+                              } else if (kategori.toLowerCase().contains('olahraga')) {
+                                iconBakat = Icons.sports_soccer_rounded;
+                                warnaBakat = const Color(0xFF4CAF50);
+                              }
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: _buildBakatCard(
+                                  iconBakat,
+                                  nama,
+                                  kategori,
+                                  status,
+                                  warnaBakat,
+                                ),
+                              );
+                            }),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+
+          // bottom navigation
+          Container(
+            height: 58,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                top: BorderSide(
+                  color: Colors.grey.shade200,
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _navItem(Icons.home_filled, 'Beranda', 0),
+                _navItem(Icons.library_books_outlined, 'Bakat', 1),
+                _navItem(Icons.more_horiz_rounded, 'Detail', 2),
+                _navItem(Icons.person_outline, 'Profil', 3),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // CARD BAKAT SAYA
-  Widget _buildBakatCard({
-    required String title,
-    required String kategori,
-    required String status,
-    required IconData icon,
-    required Color color,
-  }) {
+  // kartu statistik
+  Widget _statCard(IconData icon, String number, String label, Color color) {
     return Container(
-      width: double.infinity,
-      height: 42,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 4,
+      height: 102,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(14),
       ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.white, size: 19),
+          const SizedBox(height: 8),
+          Text(
+            number,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // kartu bakat saya
+  Widget _buildBakatCard(
+    IconData icon,
+    String nama,
+    String kategori,
+    String status,
+    Color warna,
+  ) {
+    return Container(
+      height: 68,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(
-          color: Colors.grey.shade500,
-          width: 0.8,
-        ),
+        borderRadius: BorderRadius.circular(17),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          // ICON BAKAT
-          Container(
-            width: 29,
-            height: 29,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              size: 19,
-              color: color,
-            ),
+          CircleAvatar(
+            radius: 21,
+            backgroundColor: warna.withOpacity(0.15),
+            child: Icon(icon, color: warna, size: 21),
           ),
-
-          const SizedBox(width: 9),
-
-          // NAMA DAN KATEGORI
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  nama,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                    color: darkPurple,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   'Kategori: $kategori',
                   style: const TextStyle(
-                    fontSize: 9,
-                    color: Colors.black87,
+                    fontSize: 10,
+                    color: Colors.grey,
                   ),
                 ),
               ],
             ),
           ),
-
-          // STATUS BAKAT
+          const SizedBox(width: 4),
           Container(
-            width: 70,
-            height: 18,
-            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: const Color(0xFFFFF0D5),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFFFFC857),
-                width: 0.8,
-              ),
             ),
             child: Text(
               status,
               style: const TextStyle(
-                fontSize: 8,
-                color: Colors.black87,
+                fontSize: 9,
+                color: Color(0xFFB77900),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -375,69 +498,30 @@ class _DashboardSiswaPageState extends State<DashboardSiswaPage> {
     );
   }
 
-  // BOTTOM NAVIGATION
-  Widget _buildBottomNav() {
-    return Container(
-      height: 55,
-      color: Colors.white,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(
-            icon: Icons.home_outlined,
-            title: 'Beranda',
-            index: 0,
-          ),
-          _buildNavItem(
-            icon: Icons.library_books_outlined,
-            title: 'Bakat',
-            index: 1,
-          ),
-          _buildNavItem(
-            icon: Icons.more_horiz_rounded,
-            title: 'Detail',
-            index: 2,
-          ),
-          _buildNavItem(
-            icon: Icons.person,
-            title: 'Profil',
-            index: 3,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ITEM BOTTOM NAVIGATION
-  Widget _buildNavItem({
-    required IconData icon,
-    required String title,
-    required int index,
-  }) {
+  // item bottom navigation
+  Widget _navItem(IconData icon, String label, int index) {
     final bool active = _currentIndex == index;
 
     return Expanded(
-      child: InkWell(
-        onTap: () {
-          _onNavTap(index);
-        },
+      child: GestureDetector(
+        onTap: () => _onNavTap(index),
+        behavior: HitTestBehavior.opaque,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               icon,
-              size: 23,
-              color: active ? purple : Colors.black87,
+              size: 19,
+              color: active ? purple : Colors.grey.shade400,
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Text(
-              title,
+              label,
+              maxLines: 1,
               style: TextStyle(
                 fontSize: 9,
-                color: Colors.black,
-                fontWeight: active
-                    ? FontWeight.bold
-                    : FontWeight.normal,
+                color: active ? purple : Colors.grey.shade400,
+                fontWeight: active ? FontWeight.w600 : FontWeight.normal,
               ),
             ),
           ],
